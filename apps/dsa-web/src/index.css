@@ -6,34 +6,34 @@
   --color-cyan: #00d4ff;
   --color-cyan-dim: #00a8cc;
   --color-cyan-glow: rgba(0, 212, 255, 0.4);
-  
+
   /* 辅助色 - 紫色系 */
   --color-purple: #00d4ff;
   --color-purple-dim: #00a8cc;
   --color-purple-glow: rgba(168, 85, 247, 0.3);
-  
+
   /* 状态色 */
   --color-success: #00ff88;
   --color-warning: #ffaa00;
   --color-danger: #ff4466;
-  
+
   /* 背景色 - 深黑系 */
   --bg-base: #08080c;
   --bg-card: #0d0d14;
   --bg-elevated: #12121a;
   --bg-hover: #1a1a24;
-  
+
   /* 边框色 */
   --border-dim: rgba(255, 255, 255, 0.06);
   --border-default: rgba(255, 255, 255, 0.1);
   --border-accent: rgba(0, 212, 255, 0.3);
   --border-purple: rgba(47, 165, 245, 0.3);
-  
+
   /* 文字色 */
   --text-primary: #ffffff;
   --text-secondary: #a0a0b0;
   --text-muted: #606070;
-  
+
   /* 字体 */
   font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif;
   line-height: 1.5;
@@ -68,12 +68,10 @@ body {
   inset: 0;
   border-radius: 12px;
   padding: 1px;
-  background: linear-gradient(
-    135deg,
-    rgba(85, 198, 247, 0.2) 0%,
-    rgba(0, 212, 255, 0.1) 50%,
-    rgba(85, 198, 247, 0.2) 100%
-  );
+  background: linear-gradient(135deg,
+      rgba(85, 198, 247, 0.2) 0%,
+      rgba(0, 212, 255, 0.1) 50%,
+      rgba(85, 198, 247, 0.2) 100%);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -104,12 +102,10 @@ body {
   inset: 0;
   border-radius: 12px;
   padding: 1px;
-  background: linear-gradient(
-    180deg,
-    rgba(67, 178, 246, 0.4) 0%,
-    rgba(168, 85, 247, 0.1) 50%,
-    rgba(0, 212, 255, 0.2) 100%
-  );
+  background: linear-gradient(180deg,
+      rgba(67, 178, 246, 0.4) 0%,
+      rgba(168, 85, 247, 0.1) 50%,
+      rgba(0, 212, 255, 0.2) 100%);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -126,8 +122,8 @@ body {
 /* ============ 毛玻璃卡片 ============ */
 .glass-card {
   background: rgba(13, 13, 20, 0.7);
-  backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   position: relative;
@@ -140,12 +136,10 @@ body {
   inset: 0;
   border-radius: 12px;
   padding: 1px;
-  background: linear-gradient(
-    135deg,
-    rgba(85, 209, 247, 0.25) 0%,
-    rgba(0, 212, 255, 0.15) 50%,
-    rgba(85, 209, 247, 0.1) 100%
-  );
+  background: linear-gradient(135deg,
+      rgba(85, 209, 247, 0.25) 0%,
+      rgba(0, 212, 255, 0.15) 50%,
+      rgba(85, 209, 247, 0.1) 100%);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -161,12 +155,10 @@ body {
   left: 10%;
   right: 10%;
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.15) 50%,
-    transparent 100%
-  );
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.15) 50%,
+      transparent 100%);
   pointer-events: none;
 }
 
@@ -190,12 +182,10 @@ body {
   inset: 0;
   border-radius: 8px;
   padding: 1px;
-  background: linear-gradient(
-    135deg,
-    rgba(85, 185, 247, 0.15) 0%,
-    transparent 50%,
-    rgba(0, 212, 255, 0.1) 100%
-  );
+  background: linear-gradient(135deg,
+      rgba(85, 185, 247, 0.15) 0%,
+      transparent 50%,
+      rgba(0, 212, 255, 0.1) 100%);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -222,11 +212,9 @@ body {
 
 .history-item.active::before {
   opacity: 1;
-  background: linear-gradient(
-    135deg,
-    rgba(0, 212, 255, 0.3) 0%,
-    rgba(168, 85, 247, 0.15) 100%
-  );
+  background: linear-gradient(135deg,
+      rgba(0, 212, 255, 0.3) 0%,
+      rgba(168, 85, 247, 0.15) 100%);
 }
 
 /* ============ 浮动 Dock 导航栏 ============ */
@@ -248,8 +236,8 @@ body {
   background: rgba(18, 18, 26, 0.6);
   /* 边框调淡 */
   border: 1px solid rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
   /* 阴影优化：更柔和的深色阴影 */
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   display: flex;
@@ -266,11 +254,9 @@ body {
   border-radius: inherit;
   padding: 1px;
   /* 渐变边框优化：更低调的颜色 */
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.1) 0%,
-    rgba(255, 255, 255, 0.05) 100%
-  );
+  background: linear-gradient(180deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      rgba(255, 255, 255, 0.05) 100%);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -388,7 +374,8 @@ body {
 .dock-item.is-active {
   /* 复用 Logo 的渐变背景 */
   background: linear-gradient(135deg, rgba(51, 110, 168, 0.45) 0%, #367db5 100%);
-  color: #04141d; /* 深色图标 */
+  color: #04141d;
+  /* 深色图标 */
   border-color: transparent;
   box-shadow: 0 8px 16px rgba(0, 212, 255, 0.25);
   /* Logo 的弹跳动画曲线 */
@@ -599,7 +586,7 @@ body {
   padding-left: 10px;
 }
 
-.feed-item + .feed-item {
+.feed-item+.feed-item {
   margin-top: 8px;
 }
 
@@ -624,16 +611,22 @@ body {
 
 /* ============ 动画效果 ============ */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { 
+  from {
     opacity: 0;
     transform: translateY(10px);
   }
-  to { 
+
+  to {
     opacity: 1;
     transform: translateY(0);
   }
@@ -644,6 +637,7 @@ body {
     opacity: 0;
     transform: translateX(100%);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -651,17 +645,25 @@ body {
 }
 
 @keyframes pulse-glow {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 20px var(--color-cyan-glow);
   }
+
   50% {
     box-shadow: 0 0 40px var(--color-cyan-glow);
   }
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .animate-fade-in {
@@ -685,20 +687,53 @@ body {
 }
 
 /* ============ 工具类 ============ */
-.text-cyan { color: var(--color-cyan); }
-.text-purple { color: var(--color-purple); }
-.text-success { color: var(--color-success); }
-.text-danger { color: var(--color-danger); }
-.text-warning { color: var(--color-warning); }
-.text-muted { color: var(--text-muted); }
-.text-secondary { color: var(--text-secondary); }
+.text-cyan {
+  color: var(--color-cyan);
+}
 
-.bg-base { background: var(--bg-base); }
-.bg-card { background: var(--bg-card); }
-.bg-elevated { background: var(--bg-elevated); }
+.text-purple {
+  color: var(--color-purple);
+}
 
-.border-accent { border-color: var(--border-accent); }
-.border-purple { border-color: var(--border-purple); }
+.text-success {
+  color: var(--color-success);
+}
+
+.text-danger {
+  color: var(--color-danger);
+}
+
+.text-warning {
+  color: var(--color-warning);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.bg-base {
+  background: var(--bg-base);
+}
+
+.bg-card {
+  background: var(--bg-card);
+}
+
+.bg-elevated {
+  background: var(--bg-elevated);
+}
+
+.border-accent {
+  border-color: var(--border-accent);
+}
+
+.border-purple {
+  border-color: var(--border-purple);
+}
 
 /* 发光效果 */
 .glow-cyan {
@@ -709,31 +744,78 @@ body {
   box-shadow: 0 0 20px var(--color-purple-glow);
 }
 
-/* ============ 响应式 ============ */
+/* ============ 响应式适配 ============ */
 @media (max-width: 768px) {
+
+  /* Dock 导航栏转为底部导航 */
   .dock-nav {
-    left: 12px;
+    left: 0;
+    right: 0;
+    top: auto;
+    bottom: 0;
+    transform: none;
+    width: 100%;
+    padding: 0;
   }
 
   .dock-surface {
-    width: 60px;
-    padding: 10px 8px;
-    border-radius: 22px;
+    width: 100%;
+    height: 64px;
+    flex-direction: row;
+    border-radius: 20px 20px 0 0;
+    padding: 0 16px;
+    gap: 0;
+    justify-content: space-around;
+    -webkit-backdrop-filter: blur(25px);
+    backdrop-filter: blur(25px);
+    background: rgba(13, 13, 20, 0.85);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.4);
   }
 
+  /* 底部导航模式下不需要 Logo */
   .dock-logo {
-    width: 42px;
-    height: 42px;
-    border-radius: 12px;
+    display: none;
+  }
+
+  .dock-items {
+    flex-direction: row;
+    height: 100%;
+    gap: 8px;
+    justify-content: center;
   }
 
   .dock-item {
-    width: 42px;
-    height: 42px;
-    border-radius: 12px;
+    width: 50px;
+    height: 50px;
   }
 
+  .dock-footer {
+    margin-top: 0;
+    margin-left: 8px;
+  }
+
+  /* 底部安全区适配 */
   .dock-safe-area {
-    padding-left: 88px;
+    padding-left: 0;
+    padding-bottom: 72px;
+    /* 给底部导航留出空间 */
+  }
+
+  /* 标题和文字大小优化 */
+  .title-gradient {
+    font-size: 1.5rem;
+  }
+}
+
+/* 针对极窄屏幕（如 iPhone SE）的微调 */
+@media (max-width: 375px) {
+  .dock-surface {
+    padding: 0 8px;
+  }
+
+  .dock-item {
+    width: 44px;
+    height: 44px;
   }
 }

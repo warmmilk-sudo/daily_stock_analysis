@@ -20,9 +20,14 @@ from datetime import datetime
 from typing import List, Dict, Any, Optional
 from itertools import cycle
 import requests
-from newspaper import Article, Config
-
 logger = logging.getLogger(__name__)
+
+try:
+    from newspaper import Article, Config
+except ImportError:
+    Article = None
+    Config = None
+    logger.warning("newspaper3k not found, web content fetching will be disabled")
 
 
 def fetch_url_content(url: str, timeout: int = 5) -> str:

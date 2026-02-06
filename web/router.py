@@ -143,6 +143,20 @@ class Router:
         if path == "":
             path = "/"
         
+        # --- 身份验证检查 ---
+        # 允许访问登录页面和静态健康检查
+        if not path.startswith("/login") and path != "/health":
+            cookie = request_handler.headers.get("Cookie", "")
+            if "session_id=authorized" not in cookie:
+                # 未登录，重定向到登录页面
+                response = Response(
+                    body=b"Redirecting to login...",
+                    status=HTTPStatus.SEE_OTHER,
+                    headers={"Location": "/login"}
+                )
+                response.send(request_handler)
+                return
+        
         # 匹配路由
         route = self.match(path, method)
         
@@ -183,6 +197,18 @@ class Router:
             self._dispatch_bot_webhook(request_handler, path, raw_body_bytes)
             return
         
+        # --- 身份验证检查 ---
+        if path != "/login":
+            cookie = request_handler.headers.get("Cookie", "")
+            if "session_id=authorized" not in cookie:
+                response = Response(
+                    body=b"Unauthorized",
+                    status=HTTPStatus.UNAUTHORIZED,
+                    headers={"Location": "/login"} # 虽然是 POST，但通常重定向更友好
+                )
+                response.send(request_handler)
+                return
+
         # 普通 POST 请求
         form_data = parse_qs(raw_body)
         
@@ -285,6 +311,18 @@ def create_default_router() -> Router:
     api_handler = get_api_handler()
     
     # === 页面路由 ===
+    router.register(
+        "/login", "GET",
+        lambda q: page_handler.handle_login_page(),
+        "登录页面"
+    )
+
+    router.register(
+        "/login", "POST",
+        lambda form: page_handler.handle_login_submit(form),
+        "提交登录"
+    )
+
     router.register(
         "/", "GET",
         lambda q: page_handler.handle_index(),

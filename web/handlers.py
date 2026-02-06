@@ -23,8 +23,8 @@ from http import HTTPStatus
 from datetime import datetime
 from typing import Dict, Any, Optional, TYPE_CHECKING
 
-from web.services import get_config_service, get_analysis_service
-from web.templates import render_config_page
+from web.services import get_config_service, get_analysis_service, get_auth_service
+from web.templates import render_config_page, render_login_page
 from src.enums import ReportType
 
 if TYPE_CHECKING:
@@ -44,17 +44,21 @@ class Response:
         self,
         body: bytes,
         status: HTTPStatus = HTTPStatus.OK,
-        content_type: str = "text/html; charset=utf-8"
+        content_type: str = "text/html; charset=utf-8",
+        headers: Optional[Dict[str, str]] = None
     ):
         self.body = body
         self.status = status
         self.content_type = content_type
+        self.headers = headers or {}
     
     def send(self, handler: 'BaseHTTPRequestHandler') -> None:
         """发送响应到客户端"""
         handler.send_response(self.status)
         handler.send_header("Content-Type", self.content_type)
         handler.send_header("Content-Length", str(len(self.body)))
+        for key, value in self.headers.items():
+            handler.send_header(key, value)
         handler.end_headers()
         handler.wfile.write(self.body)
 
@@ -99,6 +103,34 @@ class PageHandler:
     
     def __init__(self):
         self.config_service = get_config_service()
+        self.auth_service = get_auth_service()
+    
+    def handle_login_page(self, message: Optional[str] = None) -> Response:
+        """渲染登录页面 GET /login"""
+        body = render_login_page(message=message)
+        return HtmlResponse(body)
+    
+    def handle_login_submit(self, form_data: Dict[str, list]) -> Response:
+        """处理登录提交 POST /login"""
+        username = form_data.get("username", [""])[0]
+        password = form_data.get("password", [""])[0]
+        
+        if self.auth_service.validate(username, password):
+            # 登录成功，设置 Cookie 并跳转到首页
+            # 使用简单的 session_id=authorized 作为一个标记
+            # 生产环境应当使用随机生成的 Session ID
+            body = b'redirecting...'
+            return Response(
+                body=body,
+                status=HTTPStatus.SEE_OTHER,
+                headers={
+                    "Location": "/",
+                    "Set-Cookie": "session_id=authorized; Path=/; HttpOnly"
+                }
+            )
+        else:
+            # 登录失败
+            return self.handle_login_page(message="用户名或密码错误")
     
     def handle_index(self) -> Response:
         """处理首页请求 GET /"""

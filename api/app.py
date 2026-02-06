@@ -20,14 +20,16 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 from api.v1 import api_v1_router
 from api.middlewares.error_handler import add_error_handlers
 from api.v1.schemas.common import RootResponse, HealthResponse
+from web.services import get_auth_service
 
 
 def create_app(static_dir: Optional[Path] = None) -> FastAPI:
@@ -49,15 +51,23 @@ def create_app(static_dir: Optional[Path] = None) -> FastAPI:
         title="Daily Stock Analysis API",
         description=(
             "A股/港股/美股自选股智能分析系统 API\n\n"
-            "## 功能模块\n"
-            "- 股票分析：触发 AI 智能分析\n"
-            "- 历史记录：查询历史分析报告\n"
-            "- 股票数据：获取行情数据\n\n"
             "## 认证方式\n"
-            "当前版本暂无认证要求"
+            "需要 HTTP Basic 认证（用户名和密码在 .env 中配置）"
         ),
         version="1.0.0",
     )
+
+    security = HTTPBasic()
+    auth_service = get_auth_service()
+
+    def authenticate(credentials: HTTPBasicCredentials = Depends(security)):
+        if not auth_service.validate(credentials.username, credentials.password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect username or password",
+                headers={"WWW-Authenticate": "Basic"},
+            )
+        return credentials.username
     
     # ============================================================
     # CORS 配置
@@ -91,7 +101,7 @@ def create_app(static_dir: Optional[Path] = None) -> FastAPI:
     # 注册路由
     # ============================================================
     
-    app.include_router(api_v1_router)
+    app.include_router(api_v1_router, dependencies=[Depends(authenticate)])
     add_error_handlers(app)
     
     # ============================================================
@@ -102,7 +112,7 @@ def create_app(static_dir: Optional[Path] = None) -> FastAPI:
     
     if has_frontend:
         @app.get("/", include_in_schema=False)
-        async def root():
+        async def root(username: str = Depends(authenticate)):
             """根路由 - 返回前端页面"""
             return FileResponse(static_dir / "index.html")
     else:
@@ -111,7 +121,8 @@ def create_app(static_dir: Optional[Path] = None) -> FastAPI:
             response_model=RootResponse,
             tags=["Health"],
             summary="API 根路由",
-            description="返回 API 运行状态信息"
+            description="返回 API 运行状态信息",
+            dependencies=[Depends(authenticate)]
         )
         async def root() -> RootResponse:
             """根路由 - API 状态信息"""
@@ -128,7 +139,7 @@ def create_app(static_dir: Optional[Path] = None) -> FastAPI:
         description="用于负载均衡器或监控系统检查服务状态"
     )
     async def health_check() -> HealthResponse:
-        """健康检查接口"""
+        """健康检查接口 (保留不加密，方便监控)"""
         return HealthResponse(
             status="ok",
             timestamp=datetime.now().isoformat()
@@ -146,7 +157,7 @@ def create_app(static_dir: Optional[Path] = None) -> FastAPI:
         
         # SPA 路由回退
         @app.get("/{full_path:path}", include_in_schema=False)
-        async def serve_spa(request: Request, full_path: str):
+        async def serve_spa(request: Request, full_path: str, username: str = Depends(authenticate)):
             """SPA 路由回退 - 非 API 路由返回 index.html"""
             if full_path.startswith("api/"):
                 return None

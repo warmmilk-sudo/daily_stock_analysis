@@ -95,7 +95,8 @@ def add_error_handlers(app) -> None:
                 "error": "http_error",
                 "message": str(exc.detail) if exc.detail else "HTTP Error",
                 "detail": None
-            }
+            },
+            headers=exc.headers
         )
     
     @app.exception_handler(RequestValidationError)

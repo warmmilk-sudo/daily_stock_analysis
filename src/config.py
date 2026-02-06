@@ -21,7 +21,8 @@ def setup_env():
     """初始化环境变量（支持从 .env 加载）"""
     # src/config.py -> src/ -> root
     env_path = Path(__file__).parent.parent / '.env'
-    load_dotenv(dotenv_path=env_path)
+    # 使用 override=True 让 .env 文件覆盖系统环境变量，确保用户配置优先
+    load_dotenv(dotenv_path=env_path, override=True)
 
 
 @dataclass
@@ -252,7 +253,8 @@ class Config:
                 'eastmoney.com',   # 东方财富 (Efinance/Akshare)
                 'sina.com.cn',     # 新浪财经 (Akshare)
                 '163.com',         # 网易财经 (Akshare)
-                'tushare.pro',     # Tushare
+                # 'tushare.pro',     # Tushare
+                'tushare.nlink.vip',   # Tushare Proxy
                 'baostock.com',    # Baostock
                 'sse.com.cn',      # 上交所
                 'szse.cn',         # 深交所

@@ -20,7 +20,13 @@ import logging
 import json
 import smtplib
 import re
-import markdown2
+logger = logging.getLogger(__name__)
+
+try:
+    import markdown2
+except ImportError:
+    markdown2 = None
+    logger.warning("markdown2 not found, markdown notification might be degraded")
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 from email.mime.text import MIMEText
@@ -40,7 +46,7 @@ from src.analyzer import AnalysisResult
 from src.formatters import format_feishu_markdown
 from bot.models import BotMessage
 
-logger = logging.getLogger(__name__)
+
 
 
 class NotificationChannel(Enum):

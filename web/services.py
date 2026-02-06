@@ -26,6 +26,33 @@ from bot.models import BotMessage
 logger = logging.getLogger(__name__)
 
 # ============================================================
+# 身份验证服务
+# ============================================================
+
+class AuthService:
+    """
+    身份验证服务
+    
+    负责：
+    1. 校验用户名和密码
+    """
+    
+    def __init__(self):
+        # 默认从环境变量读取
+        self.username = os.getenv("WEB_USERNAME", "admin")
+        self.password = os.getenv("WEB_PASSWORD", "admin888")
+    
+    def validate(self, username: str, password: str) -> bool:
+        """校验用户名和密码"""
+        if self.username == "admin" and self.password == "admin888":
+            logger.warning("=" * 60)
+            logger.warning("!!! SECURITY WARNING: USING DEFAULT WEB_USERNAME AND WEB_PASSWORD !!!")
+            logger.warning("PLEASE CHANGE THEM IN YOUR .env FILE FOR EXTERNAL ACCESS SAFETY.")
+            logger.warning("=" * 60)
+        return username == self.username and password == self.password
+
+
+# ============================================================
 # 配置管理服务
 # ============================================================
 
@@ -347,6 +374,11 @@ class AnalysisService:
 def get_config_service() -> ConfigService:
     """获取配置服务实例"""
     return ConfigService()
+
+
+def get_auth_service() -> AuthService:
+    """获取身份验证服务实例"""
+    return AuthService()
 
 
 def get_analysis_service() -> AnalysisService:

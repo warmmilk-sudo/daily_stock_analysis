@@ -976,6 +976,65 @@ def render_config_page(
     return page.encode("utf-8")
 
 
+def render_login_page(
+    message: Optional[str] = None
+) -> bytes:
+    """
+    渲染登录页面
+    
+    Args:
+        message: 错误提示消息
+    """
+    toast_html = render_toast(message, toast_type="error") if message else ""
+    
+    content = f"""
+  <div class="container">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <h2 style="justify-content: center;">👤 身份验证</h2>
+        <p class="subtitle">请输入用户名和密码以进入系统</p>
+    </div>
+    
+    <form method="post" action="/login">
+      <div class="form-group">
+        <label for="username">用户名</label>
+        <input 
+            type="text" 
+            id="username" 
+            name="username" 
+            placeholder="请输入用户名"
+            required
+            autocomplete="username"
+        />
+      </div>
+      <div class="form-group">
+        <label for="password">密码</label>
+        <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            placeholder="请输入密码"
+            required
+            autocomplete="current-password"
+            style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; font-family: sans-serif;"
+        />
+      </div>
+      <button type="submit" style="margin-top: 1rem;">🔓 登录</button>
+    </form>
+    
+    <div class="footer">
+      <p>© 2026 Daily Stock Analysis System</p>
+    </div>
+  </div>
+  {toast_html}
+"""
+    
+    page = render_base(
+        title="登录 | 股票分析系统",
+        content=content
+    )
+    return page.encode("utf-8")
+
+
 def render_error_page(
     status_code: int,
     message: str,

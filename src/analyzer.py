@@ -15,7 +15,13 @@ import logging
 import time
 from dataclasses import dataclass
 from typing import Optional, Dict, Any, List
-from json_repair import repair_json
+try:
+    from json_repair import repair_json
+except ImportError:
+    repair_json = lambda x: x
+    # Note: src.analyzer doesn't have its own logger yet, but it's imported in various places
+    # We can just skip logging here or use print
+    print("WARNING: json_repair not found, using raw json fallback")
 
 from src.config import get_config
 
@@ -427,7 +433,7 @@ class GeminiAnalyzer:
         }
     },
 
-    "analysis_summary": "100字综合分析摘要",
+    "analysis_summary": "200字综合分析摘要",
     "key_points": "3-5个核心看点，逗号分隔",
     "risk_warning": "风险提示",
     "buy_reason": "操作理由，引用交易理念",

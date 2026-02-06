@@ -107,6 +107,13 @@ class TushareFetcher(BaseFetcher):
             # 获取 API 实例
             self._api = ts.pro_api()
             
+            # 修改 Tushare 接口地址 (使用反向代理)
+            # Tushare Client 默认使用 http://api.waditu.com/dataapi
+            # 这里通过修改私有属性来更改 API 地址
+            if hasattr(self._api, '_DataApi__http_url'):
+                self._api._DataApi__http_url = 'http://tushare.nlink.vip'
+                logger.info("Tushare API 地址已修改为: http://tushare.nlink.vip")
+            
             logger.info("Tushare API 初始化成功")
             
         except Exception as e:

@@ -9,6 +9,7 @@ import { useAnalysisStore } from '../stores/analysisStore';
 import { ReportSummary } from '../components/report';
 import { HistoryList } from '../components/history';
 import { TaskPanel } from '../components/tasks';
+import { Button, Input } from '../components/common';
 import { useTaskStream } from '../hooks';
 
 /**
@@ -23,7 +24,7 @@ const HomePage: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [inputError, setInputError] = useState<string>();
 
-// 历史列表状态
+  // 历史列表状态
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -89,7 +90,7 @@ const HomePage: React.FC = () => {
     enabled: true,
   });
 
-// 加载历史列表
+  // 加载历史列表
   const fetchHistory = useCallback(async (autoSelectFirst = false, reset = true) => {
     if (reset) {
       setIsLoadingHistory(true);
@@ -225,53 +226,41 @@ const HomePage: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col">
       {/* 顶部输入栏 */}
-      <header className="flex-shrink-0 px-4 py-3 border-b border-white/5">
-        <div className="flex items-center gap-2 max-w-2xl">
+      <header className="flex-shrink-0 px-4 py-3 border-b border-white/5 bg-base/50 backdrop-blur-md sticky top-0 z-10">
+        <div className="flex items-center gap-2 w-full md:max-w-2xl">
           <div className="flex-1 relative">
-            <input
-              type="text"
+            <Input
               value={stockCode}
               onChange={(e) => {
                 setStockCode(e.target.value.toUpperCase());
                 setInputError(undefined);
               }}
               onKeyDown={handleKeyDown}
-              placeholder="输入股票代码，如 600519、00700、AAPL"
+              placeholder="股票代码 (如 600519)"
               disabled={isAnalyzing}
-              className={`input-terminal w-full ${inputError ? 'border-danger/50' : ''}`}
+              error={inputError}
+              fullWidth
             />
-            {inputError && (
-              <p className="absolute -bottom-4 left-0 text-xs text-danger">{inputError}</p>
-            )}
             {duplicateError && (
               <p className="absolute -bottom-4 left-0 text-xs text-warning">{duplicateError}</p>
             )}
           </div>
-          <button
+          <Button
             type="button"
             onClick={handleAnalyze}
             disabled={!stockCode || isAnalyzing}
-            className="btn-primary flex items-center gap-1.5 whitespace-nowrap"
+            isLoading={isAnalyzing}
+            className="flex-shrink-0"
           >
-            {isAnalyzing ? (
-              <>
-                <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                分析中
-              </>
-            ) : (
-              '分析'
-            )}
-          </button>
+            分析
+          </Button>
         </div>
       </header>
 
       {/* 主内容区 */}
-      <main className="flex-1 flex overflow-hidden p-3 gap-3">
-{/* 左侧：任务面板 + 历史列表 */}
-        <div className="flex flex-col gap-3 w-64 flex-shrink-0 overflow-hidden">
+      <main className="flex-1 flex flex-col md:flex-row overflow-hidden p-3 gap-3">
+        {/* 左侧/上方：任务面板 + 历史列表 */}
+        <div className="flex flex-col gap-3 w-full md:w-64 flex-shrink-0 overflow-hidden max-h-[40vh] md:max-h-full">
           {/* 任务面板 */}
           <TaskPanel tasks={activeTasks} />
 
@@ -284,12 +273,12 @@ const HomePage: React.FC = () => {
             selectedQueryId={selectedReport?.meta.queryId}
             onItemClick={handleHistoryClick}
             onLoadMore={handleLoadMore}
-            className="max-h-[62vh] overflow-hidden"
+            className="flex-1 overflow-hidden"
           />
         </div>
 
-        {/* 右侧报告详情 */}
-        <section className="flex-1 overflow-y-auto pl-1">
+        {/* 右侧/下方：报告详情 */}
+        <section className="flex-1 overflow-y-auto md:pl-1 min-h-0">
           {isLoadingReport ? (
             <div className="flex flex-col items-center justify-center h-full">
               <div className="w-10 h-10 border-3 border-cyan/20 border-t-cyan rounded-full animate-spin" />
