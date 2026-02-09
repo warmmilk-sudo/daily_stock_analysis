@@ -1,9 +1,13 @@
-import type React from 'react';
-import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, NavLink, Navigate, useLocation } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import BacktestPage from './pages/BacktestPage';
 import NotFoundPage from './pages/NotFoundPage';
+import LoginPage from './pages/LoginPage';
+import { useAuthStore } from './stores/authStore';
 import './App.css';
+
+// ... (retain icons and DockNav) ...
 
 // 侧边导航图标
 const HomeIcon: React.FC<{ active?: boolean }> = ({ active }) => (
@@ -96,22 +100,46 @@ const DockNav: React.FC = () => {
     );
 };
 
+// 认证保护组件
+const RequireAuth: React.FC<{ children: React.ReactElement }> = ({ children }) => {
+    const { isAuthenticated } = useAuthStore();
+    const location = useLocation();
+
+    if (!isAuthenticated()) {
+        return <Navigate to="/login" state={{ from: location }} replace />;
+    }
+
+    return children;
+};
+
 const App: React.FC = () => {
     return (
         <Router>
-            <div className="flex min-h-screen bg-base">
-                {/* Dock 导航 */}
-                <DockNav />
+            <Routes>
+                <Route path="/login" element={<LoginPage />} />
 
-                {/* 主内容区 */}
-                <main className="flex-1 dock-safe-area">
-                    <Routes>
-                        <Route path="/" element={<HomePage />} />
-                        <Route path="/backtest" element={<BacktestPage />} />
-                        <Route path="*" element={<NotFoundPage />} />
-                    </Routes>
-                </main>
-            </div>
+                {/* 受保护的主应用路由 */}
+                <Route
+                    path="*"
+                    element={
+                        <RequireAuth>
+                            <div className="flex min-h-screen bg-base">
+                                {/* Dock 导航 */}
+                                <DockNav />
+
+                                {/* 主内容区 */}
+                                <main className="flex-1 dock-safe-area">
+                                    <Routes>
+                                        <Route path="/" element={<HomePage />} />
+                                        <Route path="/backtest" element={<BacktestPage />} />
+                                        <Route path="*" element={<NotFoundPage />} />
+                                    </Routes>
+                                </main>
+                            </div>
+                        </RequireAuth>
+                    }
+                />
+            </Routes>
         </Router>
     );
 };

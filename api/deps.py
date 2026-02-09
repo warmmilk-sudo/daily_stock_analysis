@@ -58,3 +58,39 @@ def get_database_manager() -> DatabaseManager:
         DatabaseManager: 数据库管理器单例对象
     """
     return DatabaseManager.get_instance()
+
+
+# ============================================================
+# 身份验证依赖
+# ============================================================
+
+from typing import Annotated
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError
+
+from src.security import verify_token
+
+# Token URL 指向我们的登录接口
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
+
+async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> str:
+    """
+    获取当前登录用户
+    
+    1. 验证 Token 有效性
+    2. 从 Token 中提取用户名
+    """
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = verify_token(token)
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+    except (JWTError, ValueError):
+        raise credentials_exception
+    return username

@@ -24,12 +24,11 @@ from fastapi import FastAPI, Request, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 from api.v1 import api_v1_router
 from api.middlewares.error_handler import add_error_handlers
 from api.v1.schemas.common import RootResponse, HealthResponse
-from src.services.task_service import get_auth_service
+from api.deps import get_current_user
 
 
 def create_app(static_dir: Optional[Path] = None) -> FastAPI:
@@ -52,22 +51,10 @@ def create_app(static_dir: Optional[Path] = None) -> FastAPI:
         description=(
             "A股/港股/美股自选股智能分析系统 API\n\n"
             "## 认证方式\n"
-            "需要 HTTP Basic 认证（用户名和密码在 .env 中配置）"
+            "部分接口需要 JWT Bearer Token"
         ),
         version="1.0.0",
     )
-
-    security = HTTPBasic()
-    auth_service = get_auth_service()
-
-    def authenticate(credentials: HTTPBasicCredentials = Depends(security)):
-        if not auth_service.validate(credentials.username, credentials.password):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect username or password",
-                headers={"WWW-Authenticate": "Basic"},
-            )
-        return credentials.username
     
     # ============================================================
     # CORS 配置
@@ -101,7 +88,8 @@ def create_app(static_dir: Optional[Path] = None) -> FastAPI:
     # 注册路由
     # ============================================================
     
-    app.include_router(api_v1_router, dependencies=[Depends(authenticate)])
+    # 移除全局 auth 依赖，由 api_v1_router 内部控制
+    app.include_router(api_v1_router)
     add_error_handlers(app)
     
     # ============================================================
@@ -112,8 +100,8 @@ def create_app(static_dir: Optional[Path] = None) -> FastAPI:
     
     if has_frontend:
         @app.get("/", include_in_schema=False)
-        async def root(username: str = Depends(authenticate)):
-            """根路由 - 返回前端页面"""
+        async def root():
+            """根路由 - 返回前端页面 (无需认证，否则无法加载登录页)"""
             return FileResponse(static_dir / "index.html")
     else:
         @app.get(
@@ -122,7 +110,7 @@ def create_app(static_dir: Optional[Path] = None) -> FastAPI:
             tags=["Health"],
             summary="API 根路由",
             description="返回 API 运行状态信息",
-            dependencies=[Depends(authenticate)]
+            dependencies=[Depends(get_current_user)]
         )
         async def root() -> RootResponse:
             """根路由 - API 状态信息"""
@@ -157,8 +145,8 @@ def create_app(static_dir: Optional[Path] = None) -> FastAPI:
         
         # SPA 路由回退
         @app.get("/{full_path:path}", include_in_schema=False)
-        async def serve_spa(request: Request, full_path: str, username: str = Depends(authenticate)):
-            """SPA 路由回退 - 非 API 路由返回 index.html"""
+        async def serve_spa(request: Request, full_path: str):
+            """SPA 路由回退 - 非 API 路由返回 index.html (无需认证)"""
             if full_path.startswith("api/"):
                 return None
             

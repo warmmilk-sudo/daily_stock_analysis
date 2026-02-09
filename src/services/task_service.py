@@ -32,6 +32,8 @@ logger = logging.getLogger(__name__)
 
 import os
 
+
+
 class AuthService:
     """
     身份验证服务
@@ -46,13 +48,17 @@ class AuthService:
         self.password = os.getenv("WEB_PASSWORD", "admin888")
     
     def validate(self, username: str, password: str) -> bool:
-        """校验用户名和密码"""
+        """
+        校验用户名和密码
+        注意：这里的 password 可能是明文（来自旧的 Basic Auth）或者是解密后的明文
+        """
         # 如果还在使用默认密码，打印警告
         if self.username == "admin" and self.password == "admin888":
             logger.warning("=" * 60)
             logger.warning("!!! SECURITY WARNING: USING DEFAULT WEB_USERNAME AND WEB_PASSWORD !!!")
             logger.warning("PLEASE CHANGE THEM IN YOUR .env FILE FOR EXTERNAL ACCESS SAFETY.")
             logger.warning("=" * 60)
+            
         return username == self.username and password == self.password
 
 def get_auth_service() -> AuthService:
