@@ -29,7 +29,7 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from api.v1 import api_v1_router
 from api.middlewares.error_handler import add_error_handlers
 from api.v1.schemas.common import RootResponse, HealthResponse
-from web.services import get_auth_service
+from src.services.task_service import get_auth_service
 
 
 def create_app(static_dir: Optional[Path] = None) -> FastAPI:
