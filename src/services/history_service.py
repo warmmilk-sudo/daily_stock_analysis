@@ -90,6 +90,7 @@ class HistoryService:
             for record in records:
                 items.append({
                     "query_id": record.query_id,
+                    "id": record.id,
                     "stock_code": record.code,
                     "stock_name": record.name,
                     "report_type": record.report_type,
@@ -112,14 +113,21 @@ class HistoryService:
         获取历史报告详情
         
         Args:
-            query_id: 分析记录唯一标识
+            query_id: 分析记录唯一标识 (支持数据库 ID 或 query_id)
             
         Returns:
             完整的分析报告字典，不存在返回 None
         """
         try:
+            # 解析 query_id: 如果是数字字符串，则视为数据库 ID
+            search_params = {}
+            if query_id and query_id.isdigit():
+                search_params["id"] = int(query_id)
+            else:
+                search_params["query_id"] = query_id
+
             # 查询数据库
-            records = self.db.get_analysis_history(query_id=query_id, limit=1)
+            records = self.db.get_analysis_history(limit=1, **search_params)
             
             if not records:
                 return None
@@ -147,6 +155,7 @@ class HistoryService:
             
             return {
                 "query_id": record.query_id,
+                "id": record.id,
                 "stock_code": record.code,
                 "stock_name": record.name,
                 "report_type": record.report_type,

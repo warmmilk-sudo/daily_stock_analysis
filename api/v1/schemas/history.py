@@ -18,6 +18,7 @@ class HistoryItem(BaseModel):
     """历史记录摘要（列表展示用）"""
     
     query_id: str = Field(..., description="分析记录唯一标识")
+    id: int = Field(..., description="数据库唯一 ID")
     stock_code: str = Field(..., description="股票代码")
     stock_name: Optional[str] = Field(None, description="股票名称")
     report_type: Optional[str] = Field(None, description="报告类型")
@@ -99,6 +100,7 @@ class ReportMeta(BaseModel):
     """报告元信息"""
     
     query_id: str = Field(..., description="分析记录唯一标识")
+    id: Optional[int] = Field(None, description="数据库唯一 ID")
     stock_code: str = Field(..., description="股票代码")
     stock_name: Optional[str] = Field(None, description="股票名称")
     report_type: Optional[str] = Field(None, description="报告类型")

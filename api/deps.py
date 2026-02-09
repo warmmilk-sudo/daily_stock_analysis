@@ -61,9 +61,10 @@ def get_database_manager() -> DatabaseManager:
 
 
 # ============================================================
-# 身份验证依赖
+# Authentication Dependencies
 # ============================================================
 
+import logging
 from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -71,15 +72,21 @@ from jose import JWTError
 
 from src.security import verify_token
 
-# Token URL 指向我们的登录接口
+logger = logging.getLogger(__name__)
+
+# Token URL points to our login endpoint
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
+
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> str:
     """
-    获取当前登录用户
+    Get current logged-in user from JWT token.
     
-    1. 验证 Token 有效性
-    2. 从 Token 中提取用户名
+    1. Validates token signature and expiry
+    2. Extracts username from payload
+    
+    Raises:
+        HTTPException: 401 if token is invalid or expired
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -90,7 +97,14 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> str
         payload = verify_token(token)
         username: str = payload.get("sub")
         if username is None:
+            logger.warning("Token payload missing 'sub' claim")
             raise credentials_exception
-    except (JWTError, ValueError):
+    except JWTError as e:
+        logger.warning(f"JWT validation failed: {e}")
         raise credentials_exception
+    except ValueError as e:
+        logger.warning(f"Token verification error: {e}")
+        raise credentials_exception
+    
+    logger.debug(f"Authenticated user: {username}")
     return username

@@ -739,7 +739,8 @@ class DatabaseManager:
         code: Optional[str] = None,
         query_id: Optional[str] = None,
         days: int = 30,
-        limit: int = 50
+        limit: int = 50,
+        **kwargs
     ) -> List[AnalysisHistory]:
         """
         查询分析历史记录
@@ -752,6 +753,8 @@ class DatabaseManager:
                 conditions.append(AnalysisHistory.code == code)
             if query_id:
                 conditions.append(AnalysisHistory.query_id == query_id)
+            if kwargs.get('id'):
+                conditions.append(AnalysisHistory.id == kwargs.get('id'))
 
             results = session.execute(
                 select(AnalysisHistory)

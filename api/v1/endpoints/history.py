@@ -85,6 +85,7 @@ def get_history_list(
         items = [
             HistoryItem(
                 query_id=item.get("query_id", ""),
+                id=item.get("id", 0),
                 stock_code=item.get("stock_code", ""),
                 stock_name=item.get("stock_name"),
                 report_type=item.get("report_type"),
@@ -178,6 +179,7 @@ def get_history_detail(
         # 构建响应模型
         meta = ReportMeta(
             query_id=result.get("query_id", query_id),
+            id=result.get("id"),
             stock_code=result.get("stock_code", ""),
             stock_name=result.get("stock_name"),
             report_type=result.get("report_type"),

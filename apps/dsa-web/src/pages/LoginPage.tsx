@@ -23,7 +23,7 @@ const LoginPage: React.FC = () => {
         // 获取 RSA 公钥
         const fetchPublicKey = async () => {
             try {
-                const response = await axios.get(`${API_BASE_URL}/auth/public-key`);
+                const response = await axios.get(`${API_BASE_URL}/api/v1/auth/public-key`);
                 setPublicKey(response.data.public_key);
             } catch (err) {
                 console.error('Failed to fetch public key', err);
@@ -53,7 +53,7 @@ const LoginPage: React.FC = () => {
             }
 
             // 发送登录请求
-            const response = await axios.post(`${API_BASE_URL}/auth/login`, {
+            const response = await axios.post(`${API_BASE_URL}/api/v1/auth/login`, {
                 username,
                 encrypted_password: encryptedPassword,
             });
@@ -105,6 +105,7 @@ const LoginPage: React.FC = () => {
                             className="input input-bordered w-full"
                             value={username}
                             onChange={(e) => setUsernameInput(e.target.value)}
+                            autoFocus
                             required
                         />
                     </div>
@@ -125,10 +126,15 @@ const LoginPage: React.FC = () => {
 
                     <button
                         type="submit"
-                        className={`btn btn-primary w-full ${loading ? 'loading' : ''}`}
+                        className="btn btn-primary w-full"
                         disabled={loading || !publicKey}
                     >
-                        {loading ? '登录中...' : '登录'}
+                        {loading ? (
+                            <>
+                                <span className="loading loading-spinner loading-sm"></span>
+                                登录中...
+                            </>
+                        ) : '登录'}
                     </button>
 
                     {!publicKey && !error && (

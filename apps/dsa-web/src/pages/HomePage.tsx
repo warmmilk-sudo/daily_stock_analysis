@@ -125,7 +125,7 @@ const HomePage: React.FC = () => {
         const firstItem = response.items[0];
         setIsLoadingReport(true);
         try {
-          const report = await historyApi.getDetail(firstItem.queryId);
+          const report = await historyApi.getDetail(String(firstItem.id));
           setSelectedReport(report);
         } catch (err) {
           console.error('Failed to fetch first report:', err);
@@ -154,13 +154,13 @@ const HomePage: React.FC = () => {
   }, []);
 
   // 点击历史项加载报告
-  const handleHistoryClick = async (queryId: string) => {
+  const handleHistoryClick = async (id: number) => {
     // 取消当前分析请求的结果显示（通过递增 requestId）
     analysisRequestIdRef.current += 1;
 
     setIsLoadingReport(true);
     try {
-      const report = await historyApi.getDetail(queryId);
+      const report = await historyApi.getDetail(String(id));
       setSelectedReport(report);
     } catch (err) {
       console.error('Failed to fetch report:', err);
@@ -270,7 +270,7 @@ const HomePage: React.FC = () => {
             isLoading={isLoadingHistory}
             isLoadingMore={isLoadingMore}
             hasMore={hasMore}
-            selectedQueryId={selectedReport?.meta.queryId}
+            selectedId={selectedReport?.meta.id}
             onItemClick={handleHistoryClick}
             onLoadMore={handleLoadMore}
             className="flex-1 overflow-hidden"

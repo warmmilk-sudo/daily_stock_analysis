@@ -819,3 +819,39 @@ body {
     height: 44px;
   }
 }
+
+/* ============ 情绪等级相关样式 ============ */
+.sentiment-level-20 {
+  --sentiment-color: #ef4444;
+  --sentiment-color-rgb: 239, 68, 68;
+}
+
+.sentiment-level-40 {
+  --sentiment-color: #f97316;
+  --sentiment-color-rgb: 249, 115, 22;
+}
+
+.sentiment-level-60 {
+  --sentiment-color: #eab308;
+  --sentiment-color-rgb: 234, 179, 8;
+}
+
+.sentiment-level-80 {
+  --sentiment-color: #22c55e;
+  --sentiment-color-rgb: 34, 197, 94;
+}
+
+.sentiment-level-100 {
+  --sentiment-color: #10b981;
+  --sentiment-color-rgb: 16, 185, 129;
+}
+
+.sentiment-indicator-bar {
+  background-color: var(--sentiment-color);
+  box-shadow: 0 0 6px rgba(var(--sentiment-color-rgb), 0.4);
+}
+
+.sentiment-indicator-tag {
+  color: var(--sentiment-color);
+  background-color: rgba(var(--sentiment-color-rgb), 0.15);
+}

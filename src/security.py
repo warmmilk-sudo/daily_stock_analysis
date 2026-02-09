@@ -13,6 +13,7 @@
 
 import os
 import base64
+import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Tuple
 
@@ -20,6 +21,8 @@ from jose import jwt, JWTError
 from passlib.context import CryptContext
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_v1_5
+
+logger = logging.getLogger(__name__)
 
 # ============================================================
 # 配置

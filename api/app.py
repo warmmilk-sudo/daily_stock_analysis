@@ -85,10 +85,25 @@ def create_app(static_dir: Optional[Path] = None) -> FastAPI:
     )
     
     # ============================================================
-    # 注册路由
+    # Security Headers Middleware
     # ============================================================
     
-    # 移除全局 auth 依赖，由 api_v1_router 内部控制
+    @app.middleware("http")
+    async def add_security_headers(request: Request, call_next):
+        """Add security headers to all responses"""
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        # Content-Security-Policy can be added but needs careful tuning for SPA
+        return response
+    
+    # ============================================================
+    # Register Routes
+    # ============================================================
+    
+    # Authentication is controlled per-route inside api_v1_router
     app.include_router(api_v1_router)
     add_error_handlers(app)
     

@@ -17,6 +17,7 @@ export interface AnalysisRequest {
 /** 报告元信息 */
 export interface ReportMeta {
   queryId: string;
+  id?: number;
   stockCode: string;
   stockName: string;
   reportType: 'simple' | 'detailed';
@@ -123,6 +124,7 @@ export interface DuplicateTaskError {
 /** 历史记录摘要（列表展示用） */
 export interface HistoryItem {
   queryId: string;
+  id: number;
   stockCode: string;
   stockName?: string;
   reportType?: string;
