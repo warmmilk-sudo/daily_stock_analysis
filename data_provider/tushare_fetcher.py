@@ -123,16 +123,18 @@ class TushareFetcher(BaseFetcher):
 
     def _patch_api_endpoint(self, token: str) -> None:
         """
-        Patch tushare SDK to use the official api.tushare.pro endpoint.
+        Patch tushare SDK to use the configured API endpoint.
 
         The SDK (v1.4.x) hardcodes http://api.waditu.com/dataapi and appends
         /{api_name} to the URL. That endpoint may return 503, causing silent
         empty-DataFrame failures. This method replaces the query method to
-        POST directly to http://api.tushare.pro (root URL, no path suffix).
+        POST directly to the configured TUSHARE_URL (root URL, no path suffix).
         """
         import types
 
-        TUSHARE_API_URL = "http://api.tushare.pro"
+        # 从配置中读取 Tushare API URL（支持通过 .env 自定义代理地址）
+        config = get_config()
+        tushare_api_url = config.tushare_url
         _token = token
         _timeout = getattr(self._api, '_DataApi__timeout', 30)
 
@@ -143,7 +145,7 @@ class TushareFetcher(BaseFetcher):
                 'params': kwargs,
                 'fields': fields,
             }
-            res = requests.post(TUSHARE_API_URL, json=req_params, timeout=_timeout)
+            res = requests.post(tushare_api_url, json=req_params, timeout=_timeout)
             if res.status_code != 200:
                 raise Exception(f"Tushare API HTTP {res.status_code}")
             result = _json.loads(res.text)
@@ -155,7 +157,7 @@ class TushareFetcher(BaseFetcher):
             return pd.DataFrame(items, columns=columns)
 
         self._api.query = types.MethodType(patched_query, self._api)
-        logger.debug(f"Tushare API endpoint patched to {TUSHARE_API_URL}")
+        logger.debug(f"Tushare API endpoint patched to {tushare_api_url}")
 
     def _determine_priority(self) -> int:
         """
