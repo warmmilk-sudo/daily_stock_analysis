@@ -12,10 +12,12 @@ API 依赖注入模块
 
 from typing import Generator
 
+from fastapi import Request
 from sqlalchemy.orm import Session
 
 from src.storage import DatabaseManager
 from src.config import get_config, Config
+from src.services.system_config_service import SystemConfigService
 
 
 def get_db() -> Generator[Session, None, None]:
@@ -108,3 +110,12 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> str
     
     logger.debug(f"Authenticated user: {username}")
     return username
+
+
+def get_system_config_service(request: Request) -> SystemConfigService:
+    """Get app-lifecycle shared SystemConfigService instance."""
+    service = getattr(request.app.state, "system_config_service", None)
+    if service is None:
+        service = SystemConfigService()
+        request.app.state.system_config_service = service
+    return service

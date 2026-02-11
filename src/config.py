@@ -17,18 +17,22 @@ from dotenv import load_dotenv, dotenv_values
 from dataclasses import dataclass, field
 
 
-def setup_env():
-    """初始化环境变量（支持从 .env 加载）"""
-    # 优先从 ENV_FILE 环境变量读取，否则默认使用项目根目录下的 .env
+def setup_env(override: bool = False):
+    """
+    Initialize environment variables from .env file.
+
+    Args:
+        override: If True, overwrite existing environment variables with values
+                  from .env file. Set to True when reloading config after updates.
+                  Default is False to preserve behavior on initial load where
+                  system environment variables take precedence.
+    """
     env_file = os.getenv("ENV_FILE")
     if env_file:
         env_path = Path(env_file)
     else:
         env_path = Path(__file__).parent.parent / '.env'
-    
-    # 使用 override=True 让 .env 文件覆盖系统环境变量，确保用户配置优先
-    if env_path.exists():
-        load_dotenv(dotenv_path=env_path, override=True)
+    load_dotenv(dotenv_path=env_path, override=override)
 
 
 @dataclass
