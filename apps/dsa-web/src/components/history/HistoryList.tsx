@@ -1,6 +1,7 @@
 import type React from 'react';
 import { useRef, useCallback, useEffect } from 'react';
 import type { HistoryItem } from '../../types/analysis';
+import { getSentimentColor } from '../../types/analysis';
 import { formatDateTime } from '../../utils/format';
 
 interface HistoryListProps {
@@ -8,22 +9,11 @@ interface HistoryListProps {
   isLoading: boolean;
   isLoadingMore: boolean;
   hasMore: boolean;
-  selectedId?: number;
-  onItemClick: (id: number) => void;
+  selectedId?: number;  // Selected history record ID
+  onItemClick: (recordId: number) => void;  // Callback with record ID
   onLoadMore: () => void;
   className?: string;
 }
-
-/**
- * 获取情绪等级对应的 CSS 类名
- */
-const getSentimentLevelClass = (score: number): string => {
-  if (score <= 20) return 'sentiment-level-20';
-  if (score <= 40) return 'sentiment-level-40';
-  if (score <= 60) return 'sentiment-level-60';
-  if (score <= 80) return 'sentiment-level-80';
-  return 'sentiment-level-100';
-};
 
 /**
  * 历史记录列表组件
@@ -108,7 +98,11 @@ export const HistoryList: React.FC<HistoryListProps> = ({
                   {/* 情感分数指示条 */}
                   {item.sentimentScore !== undefined && (
                     <span
-                      className={`w-0.5 h-8 rounded-full flex-shrink-0 sentiment-indicator-bar ${getSentimentLevelClass(item.sentimentScore)}`}
+                      className="w-0.5 h-8 rounded-full flex-shrink-0"
+                      style={{
+                        backgroundColor: getSentimentColor(item.sentimentScore),
+                        boxShadow: `0 0 6px ${getSentimentColor(item.sentimentScore)}40`
+                      }}
                     />
                   )}
                   <div className="flex-1 min-w-0">
@@ -118,7 +112,11 @@ export const HistoryList: React.FC<HistoryListProps> = ({
                       </span>
                       {item.sentimentScore !== undefined && (
                         <span
-                          className={`text-xs font-mono font-semibold px-1 py-0.5 rounded sentiment-indicator-tag ${getSentimentLevelClass(item.sentimentScore)}`}
+                          className="text-xs font-mono font-semibold px-1 py-0.5 rounded"
+                          style={{
+                            color: getSentimentColor(item.sentimentScore),
+                            backgroundColor: `${getSentimentColor(item.sentimentScore)}15`
+                          }}
                         >
                           {item.sentimentScore}
                         </span>

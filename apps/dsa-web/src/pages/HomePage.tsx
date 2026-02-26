@@ -1,5 +1,6 @@
 import type React from 'react';
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { HistoryItem, AnalysisReport, TaskInfo } from '../types/analysis';
 import { historyApi } from '../api/history';
 import { analysisApi, DuplicateTaskError } from '../api/analysis';
@@ -9,7 +10,6 @@ import { useAnalysisStore } from '../stores/analysisStore';
 import { ReportSummary } from '../components/report';
 import { HistoryList } from '../components/history';
 import { TaskPanel } from '../components/tasks';
-import { Button, Input } from '../components/common';
 import { useTaskStream } from '../hooks';
 
 /**
@@ -18,13 +18,14 @@ import { useTaskStream } from '../hooks';
  */
 const HomePage: React.FC = () => {
   const { setLoading, setError: setStoreError } = useAnalysisStore();
+  const navigate = useNavigate();
 
   // 输入状态
   const [stockCode, setStockCode] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [inputError, setInputError] = useState<string>();
 
-  // 历史列表状态
+// 历史列表状态
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -90,21 +91,34 @@ const HomePage: React.FC = () => {
     enabled: true,
   });
 
-  // 加载历史列表
-  const fetchHistory = useCallback(async (autoSelectFirst = false, reset = true) => {
-    if (reset) {
-      setIsLoadingHistory(true);
+// 加载历史列表
+  const fetchHistory = useCallback(async (autoSelectFirst = false, reset = true, silent = false) => {
+    if (!silent) {
+      if (reset) {
+        setIsLoadingHistory(true);
+        setCurrentPage(1);
+      } else {
+        setIsLoadingMore(true);
+      }
+    } else if (reset) {
+      // Silent reset still needs page reset for correct API call
       setCurrentPage(1);
-    } else {
-      setIsLoadingMore(true);
     }
 
     const page = reset ? 1 : currentPage + 1;
 
     try {
+      // TODO: Proper timezone handling needed
+      // Using tomorrow as endDate is a temporary workaround to include today's records.
+      // This may incorrectly include tomorrow's data and is semantically inconsistent across timezones.
+      // Better solution: standardize backend & frontend to use UTC or fixed timezone (Asia/Shanghai),
+      // or construct endDate on frontend as end-of-day timestamp.
+      const tomorrowDate = new Date();
+      tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+      
       const response = await historyApi.getList({
         startDate: getRecentStartDate(30),
-        endDate: toDateInputValue(new Date()),
+        endDate: toDateInputValue(tomorrowDate),
         page,
         limit: pageSize,
       });
@@ -125,7 +139,7 @@ const HomePage: React.FC = () => {
         const firstItem = response.items[0];
         setIsLoadingReport(true);
         try {
-          const report = await historyApi.getDetail(String(firstItem.id));
+          const report = await historyApi.getDetail(firstItem.id);
           setSelectedReport(report);
         } catch (err) {
           console.error('Failed to fetch first report:', err);
@@ -151,16 +165,35 @@ const HomePage: React.FC = () => {
   // 初始加载 - 自动选择第一条
   useEffect(() => {
     fetchHistory(true);
-  }, []);
+  }, [fetchHistory]);
+
+  // Background polling: re-fetch history every 30s for CLI-initiated analyses
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchHistory(false, true, true);
+    }, 30_000);
+    return () => clearInterval(interval);
+  }, [fetchHistory]);
+
+  // Refresh when tab regains visibility (e.g. user ran main.py in another terminal)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchHistory(false, true, true);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [fetchHistory]);
 
   // 点击历史项加载报告
-  const handleHistoryClick = async (id: number) => {
+  const handleHistoryClick = async (recordId: number) => {
     // 取消当前分析请求的结果显示（通过递增 requestId）
     analysisRequestIdRef.current += 1;
 
     setIsLoadingReport(true);
     try {
-      const report = await historyApi.getDetail(String(id));
+      const report = await historyApi.getDetail(recordId);
       setSelectedReport(report);
     } catch (err) {
       console.error('Failed to fetch report:', err);
@@ -224,86 +257,116 @@ const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* 顶部输入栏 */}
-      <header className="flex-shrink-0 px-4 py-3 border-b border-white/5 bg-base/50 backdrop-blur-md sticky top-0 z-10">
-        <div className="flex items-center gap-2 w-full md:max-w-2xl">
-          <div className="flex-1 relative">
-            <Input
+    <div
+      className="min-h-screen grid overflow-hidden w-full"
+      style={{ gridTemplateColumns: 'minmax(12px, 1fr) 256px 24px minmax(auto, 896px) minmax(12px, 1fr)', gridTemplateRows: 'auto 1fr' }}
+    >
+      {/* 顶部输入栏 - 与历史记录框左对齐，与 Market Sentiment 外框右对齐（不含 col5 右 padding） */}
+      <header
+        className="col-start-2 col-end-5 row-start-1 py-3 border-b border-white/5 flex-shrink-0 flex items-center min-w-0 overflow-hidden"
+      >
+        <div className="flex items-center gap-2 w-full min-w-0 flex-1" style={{ maxWidth: 'min(100%, 1168px)' }}>
+          <div className="flex-1 relative min-w-0">
+            <input
+              type="text"
               value={stockCode}
               onChange={(e) => {
                 setStockCode(e.target.value.toUpperCase());
                 setInputError(undefined);
               }}
               onKeyDown={handleKeyDown}
-              placeholder="股票代码 (如 600519)"
+              placeholder="输入股票代码，如 600519、00700、AAPL"
               disabled={isAnalyzing}
-              error={inputError}
-              fullWidth
+              className={`input-terminal w-full ${inputError ? 'border-danger/50' : ''}`}
             />
+            {inputError && (
+              <p className="absolute -bottom-4 left-0 text-xs text-danger">{inputError}</p>
+            )}
             {duplicateError && (
               <p className="absolute -bottom-4 left-0 text-xs text-warning">{duplicateError}</p>
             )}
           </div>
-          <Button
+          <button
             type="button"
             onClick={handleAnalyze}
             disabled={!stockCode || isAnalyzing}
-            isLoading={isAnalyzing}
-            className="flex-shrink-0"
+            className="btn-primary flex items-center gap-1.5 whitespace-nowrap flex-shrink-0"
           >
-            分析
-          </Button>
+            {isAnalyzing ? (
+              <>
+                <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                分析中
+              </>
+            ) : (
+              '分析'
+            )}
+          </button>
         </div>
       </header>
 
-      {/* 主内容区 */}
-      <main className="flex-1 flex flex-col md:flex-row overflow-hidden p-3 gap-3">
-        {/* 左侧/上方：任务面板 + 历史列表 */}
-        <div className="flex flex-col gap-3 w-full md:w-64 flex-shrink-0 overflow-hidden max-h-[40vh] md:max-h-full">
-          {/* 任务面板 */}
-          <TaskPanel tasks={activeTasks} />
+      {/* 左侧：任务面板 + 历史列表 */}
+      <div
+        className="col-start-2 row-start-2 flex flex-col gap-3 overflow-hidden min-h-0"
+      >
+        <TaskPanel tasks={activeTasks} />
+        <HistoryList
+          items={historyItems}
+          isLoading={isLoadingHistory}
+          isLoadingMore={isLoadingMore}
+          hasMore={hasMore}
+          selectedId={selectedReport?.meta.id}
+          onItemClick={handleHistoryClick}
+          onLoadMore={handleLoadMore}
+          className="max-h-[62vh] overflow-hidden"
+        />
+      </div>
 
-          {/* 历史列表 */}
-          <HistoryList
-            items={historyItems}
-            isLoading={isLoadingHistory}
-            isLoadingMore={isLoadingMore}
-            hasMore={hasMore}
-            selectedId={selectedReport?.meta.id}
-            onItemClick={handleHistoryClick}
-            onLoadMore={handleLoadMore}
-            className="flex-1 overflow-hidden"
-          />
-        </div>
-
-        {/* 右侧/下方：报告详情 */}
-        <section className="flex-1 overflow-y-auto md:pl-1 min-h-0">
-          {isLoadingReport ? (
-            <div className="flex flex-col items-center justify-center h-full">
-              <div className="w-10 h-10 border-3 border-cyan/20 border-t-cyan rounded-full animate-spin" />
-              <p className="mt-3 text-secondary text-sm">加载报告中...</p>
-            </div>
-          ) : selectedReport ? (
-            <div className="max-w-4xl">
-              {/* 报告内容 */}
-              <ReportSummary data={selectedReport} isHistory />
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full text-center">
-              <div className="w-12 h-12 mb-3 rounded-xl bg-elevated flex items-center justify-center">
-                <svg className="w-6 h-6 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      {/* 右侧报告详情 */}
+      <section className="col-start-4 row-start-2 flex-1 overflow-y-auto pl-1 min-w-0 min-h-0">
+        {isLoadingReport ? (
+          <div className="flex flex-col items-center justify-center h-full">
+            <div className="w-10 h-10 border-3 border-cyan/20 border-t-cyan rounded-full animate-spin" />
+            <p className="mt-3 text-secondary text-sm">加载报告中...</p>
+          </div>
+        ) : selectedReport ? (
+          <div className="max-w-4xl">
+            {/* Follow-up button */}
+            <div className="flex items-center justify-end mb-2">
+              <button
+                disabled={selectedReport.meta.id === undefined}
+                onClick={() => {
+                  const code = selectedReport.meta.stockCode;
+                  const name = selectedReport.meta.stockName;
+                  const rid = selectedReport.meta.id!;
+                  navigate(`/chat?stock=${encodeURIComponent(code)}&name=${encodeURIComponent(name)}&recordId=${rid}`);
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan/10 border border-cyan/20 text-cyan text-sm hover:bg-cyan/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
-              </div>
-              <h3 className="text-base font-medium text-white mb-1.5">开始分析</h3>
-              <p className="text-xs text-muted max-w-xs">
-                输入股票代码进行分析，或从左侧选择历史报告查看
-              </p>
+                追问 AI
+              </button>
             </div>
-          )}
-        </section>
-      </main>
+            <ReportSummary data={selectedReport} isHistory />
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full text-center">
+            <div className="w-12 h-12 mb-3 rounded-xl bg-elevated flex items-center justify-center">
+              <svg className="w-6 h-6 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <h3 className="text-base font-medium text-white mb-1.5">开始分析</h3>
+            <p className="text-xs text-muted max-w-xs">
+              输入股票代码进行分析，或从左侧选择历史报告查看
+            </p>
+          </div>
+        )}
+      </section>
     </div>
   );
 };

@@ -27,6 +27,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 from api.v1 import api_v1_router
+from api.middlewares.auth import add_auth_middleware
 from api.middlewares.error_handler import add_error_handlers
 from api.v1.schemas.common import RootResponse, HealthResponse
 from api.deps import get_current_user
@@ -97,6 +98,8 @@ def create_app(static_dir: Optional[Path] = None) -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    add_auth_middleware(app)
     
     # ============================================================
     # Security Headers Middleware

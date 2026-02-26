@@ -62,56 +62,6 @@ def get_database_manager() -> DatabaseManager:
     return DatabaseManager.get_instance()
 
 
-# ============================================================
-# Authentication Dependencies
-# ============================================================
-
-import logging
-from typing import Annotated
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError
-
-from src.security import verify_token
-
-logger = logging.getLogger(__name__)
-
-# Token URL points to our login endpoint
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
-
-
-async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> str:
-    """
-    Get current logged-in user from JWT token.
-    
-    1. Validates token signature and expiry
-    2. Extracts username from payload
-    
-    Raises:
-        HTTPException: 401 if token is invalid or expired
-    """
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = verify_token(token)
-        username: str = payload.get("sub")
-        if username is None:
-            logger.warning("Token payload missing 'sub' claim")
-            raise credentials_exception
-    except JWTError as e:
-        logger.warning(f"JWT validation failed: {e}")
-        raise credentials_exception
-    except ValueError as e:
-        logger.warning(f"Token verification error: {e}")
-        raise credentials_exception
-    
-    logger.debug(f"Authenticated user: {username}")
-    return username
-
-
 def get_system_config_service(request: Request) -> SystemConfigService:
     """Get app-lifecycle shared SystemConfigService instance."""
     service = getattr(request.app.state, "system_config_service", None)
