@@ -21,7 +21,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, Request, Depends, HTTPException, status
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -30,7 +30,6 @@ from api.v1 import api_v1_router
 from api.middlewares.auth import add_auth_middleware
 from api.middlewares.error_handler import add_error_handlers
 from api.v1.schemas.common import RootResponse, HealthResponse
-from api.deps import get_current_user
 from src.services.system_config_service import SystemConfigService
 
 
@@ -64,8 +63,12 @@ def create_app(static_dir: Optional[Path] = None) -> FastAPI:
         title="Daily Stock Analysis API",
         description=(
             "A股/港股/美股自选股智能分析系统 API\n\n"
+            "## 功能模块\n"
+            "- 股票分析：触发 AI 智能分析\n"
+            "- 历史记录：查询历史分析报告\n"
+            "- 股票数据：获取行情数据\n\n"
             "## 认证方式\n"
-            "部分接口需要 JWT Bearer Token"
+            "当前版本暂无认证要求"
         ),
         version="1.0.0",
         lifespan=app_lifespan,
@@ -102,25 +105,9 @@ def create_app(static_dir: Optional[Path] = None) -> FastAPI:
     add_auth_middleware(app)
     
     # ============================================================
-    # Security Headers Middleware
+    # 注册路由
     # ============================================================
     
-    @app.middleware("http")
-    async def add_security_headers(request: Request, call_next):
-        """Add security headers to all responses"""
-        response = await call_next(request)
-        response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["X-Frame-Options"] = "DENY"
-        response.headers["X-XSS-Protection"] = "1; mode=block"
-        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        # Content-Security-Policy can be added but needs careful tuning for SPA
-        return response
-    
-    # ============================================================
-    # Register Routes
-    # ============================================================
-    
-    # Authentication is controlled per-route inside api_v1_router
     app.include_router(api_v1_router)
     add_error_handlers(app)
     
@@ -133,7 +120,7 @@ def create_app(static_dir: Optional[Path] = None) -> FastAPI:
     if has_frontend:
         @app.get("/", include_in_schema=False)
         async def root():
-            """根路由 - 返回前端页面 (无需认证，否则无法加载登录页)"""
+            """根路由 - 返回前端页面"""
             return FileResponse(static_dir / "index.html")
     else:
         @app.get(
@@ -141,8 +128,7 @@ def create_app(static_dir: Optional[Path] = None) -> FastAPI:
             response_model=RootResponse,
             tags=["Health"],
             summary="API 根路由",
-            description="返回 API 运行状态信息",
-            dependencies=[Depends(get_current_user)]
+            description="返回 API 运行状态信息"
         )
         async def root() -> RootResponse:
             """根路由 - API 状态信息"""
@@ -159,7 +145,7 @@ def create_app(static_dir: Optional[Path] = None) -> FastAPI:
         description="用于负载均衡器或监控系统检查服务状态"
     )
     async def health_check() -> HealthResponse:
-        """健康检查接口 (保留不加密，方便监控)"""
+        """健康检查接口"""
         return HealthResponse(
             status="ok",
             timestamp=datetime.now().isoformat()
@@ -178,7 +164,7 @@ def create_app(static_dir: Optional[Path] = None) -> FastAPI:
         # SPA 路由回退
         @app.get("/{full_path:path}", include_in_schema=False)
         async def serve_spa(request: Request, full_path: str):
-            """SPA 路由回退 - 非 API 路由返回 index.html (无需认证)"""
+            """SPA 路由回退 - 非 API 路由返回 index.html"""
             if full_path.startswith("api/"):
                 return None
             
