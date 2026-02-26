@@ -820,6 +820,187 @@ body {
   }
 }
 
+/* ============ 移动端深度优化 ============ */
+/* 1. 首页移动端优化 */
+@media (max-width: 768px) {
+  /* 顶部输入栏 */
+  .HomePage header {
+    padding: 12px 16px !important;
+  }
+  
+  .HomePage header input {
+    font-size: 14px !important;
+    padding: 10px 12px !important;
+  }
+  
+  .HomePage header button {
+    padding: 10px 16px !important;
+    font-size: 14px !important;
+  }
+  
+  /* 左侧历史列表 */
+  .HomePage .col-start-2 {
+    max-height: 50vh !important;
+  }
+  
+  /* 右侧报告区域 */
+  .HomePage section.col-start-4 {
+    padding: 16px !important;
+  }
+  
+  .HomePage section.col-start-4 .max-w-4xl {
+    max-width: 100% !important;
+  }
+}
+
+/* 2. 问股页移动端优化 */
+@media (max-width: 768px) {
+  .ChatPage {
+    padding: 12px !important;
+  }
+  
+  .ChatPage header {
+    padding: 0 0 16px 0 !important;
+  }
+  
+  .ChatPage header h1 {
+    font-size: 1.5rem !important;
+  }
+  
+  .ChatPage .glass-card {
+    border-radius: 12px !important;
+  }
+  
+  .ChatPage .max-w-\[80\%\] {
+    max-width: 85% !important;
+  }
+  
+  .ChatPage .prose {
+    font-size: 14px !important;
+  }
+  
+  .ChatPage textarea {
+    font-size: 14px !important;
+    padding: 10px 12px !important;
+  }
+  
+  .ChatPage button {
+    font-size: 14px !important;
+    padding: 10px 16px !important;
+  }
+}
+
+/* 3. 卡片组件移动端优化 */
+@media (max-width: 768px) {
+  .terminal-card,
+  .gradient-border-card,
+  .glass-card {
+    border-radius: 12px !important;
+    padding: 12px !important;
+  }
+  
+  .terminal-card h3,
+  .gradient-border-card h3,
+  .glass-card h3 {
+    font-size: 16px !important;
+    margin-bottom: 8px !important;
+  }
+  
+  .terminal-card p,
+  .gradient-border-card p,
+  .glass-card p {
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+  }
+}
+
+/* 4. 按钮组件移动端优化 */
+@media (max-width: 768px) {
+  .btn-primary,
+  .btn-secondary {
+    padding: 10px 16px !important;
+    font-size: 14px !important;
+  }
+  
+  .btn-primary svg,
+  .btn-secondary svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+}
+
+/* 5. 徽章组件移动端优化 */
+@media (max-width: 768px) {
+  .badge {
+    padding: 3px 8px !important;
+    font-size: 11px !important;
+  }
+}
+
+/* 6. 列表项移动端优化 */
+@media (max-width: 768px) {
+  .list-item,
+  .history-item {
+    padding: 10px 12px !important;
+    border-radius: 8px !important;
+  }
+  
+  .list-item h3,
+  .history-item h3 {
+    font-size: 14px !important;
+  }
+  
+  .list-item p,
+  .history-item p {
+    font-size: 13px !important;
+  }
+}
+
+/* 7. 输入框移动端优化 */
+@media (max-width: 768px) {
+  .input-terminal {
+    font-size: 14px !important;
+    padding: 10px 12px !important;
+  }
+}
+
+/* 8. 滚动条移动端优化 */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 4px !important;
+    height: 4px !important;
+  }
+}
+
+/* 9. 触摸优化 */
+@media (hover: none) and (pointer: coarse) {
+  /* 移动端触摸优化 */
+  .dock-item,
+  .btn-primary,
+  .btn-secondary,
+  .list-item,
+  .history-item,
+  .input-terminal {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* 增加触摸区域 */
+  .dock-item {
+    min-width: 48px;
+    min-height: 48px;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    min-height: 44px;
+  }
+  
+  .input-terminal {
+    min-height: 44px;
+  }
+}
+
 /* ============ 情绪等级相关样式 ============ */
 .sentiment-level-20 {
   --sentiment-color: #ef4444;

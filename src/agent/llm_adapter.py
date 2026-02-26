@@ -120,10 +120,34 @@ class LLMToolAdapter:
         self._init_providers()
 
     def _init_providers(self):
-        """Initialize all available LLM providers."""
+        """Initialize all available LLM providers.
+        
+        Priority: OpenAI (if configured) > Gemini > Anthropic
+        Only initialize OpenAI if API key is configured, otherwise try Gemini/Anthropic.
+        This avoids unnecessary initialization of unused providers.
+        """
         config = self._config
 
-        # Gemini
+        # 1. First, try OpenAI (preferred if configured)
+        openai_key = config.openai_api_key
+        if openai_key and not openai_key.startswith("your_") and len(openai_key) > 10:
+            try:
+                from openai import OpenAI
+                client_kwargs = {"api_key": openai_key}
+                if config.openai_base_url:
+                    client_kwargs["base_url"] = config.openai_base_url
+                if config.openai_base_url and "aihubmix.com" in config.openai_base_url:
+                    client_kwargs["default_headers"] = {"APP-Code": "GPIJ3886"}
+                # Add timeout to avoid hanging requests (default 300 seconds)
+                client_kwargs["timeout"] = 180
+                self._openai_client = OpenAI(**client_kwargs)
+                self._openai_available = True
+                logger.info("Agent LLM: OpenAI initialized (preferred)")
+                return  # Only initialize OpenAI, skip others
+            except Exception as e:
+                logger.warning(f"Agent LLM: OpenAI init failed: {e}")
+
+        # 2. If OpenAI not available, try Gemini
         gemini_key = config.gemini_api_key
         if gemini_key and not gemini_key.startswith("your_") and len(gemini_key) > 10:
             try:
@@ -136,7 +160,7 @@ class LLMToolAdapter:
             except Exception as e:
                 logger.warning(f"Agent LLM: Gemini init failed: {e}")
 
-        # Anthropic
+        # 3. If Gemini not available, try Anthropic
         anthropic_key = config.anthropic_api_key
         if anthropic_key and not anthropic_key.startswith("your_") and len(anthropic_key) > 10:
             try:
@@ -146,22 +170,6 @@ class LLMToolAdapter:
                 logger.info("Agent LLM: Anthropic initialized")
             except Exception as e:
                 logger.warning(f"Agent LLM: Anthropic init failed: {e}")
-
-        # OpenAI
-        openai_key = config.openai_api_key
-        if openai_key and not openai_key.startswith("your_") and len(openai_key) > 10:
-            try:
-                from openai import OpenAI
-                client_kwargs = {"api_key": openai_key}
-                if config.openai_base_url:
-                    client_kwargs["base_url"] = config.openai_base_url
-                if config.openai_base_url and "aihubmix.com" in config.openai_base_url:
-                    client_kwargs["default_headers"] = {"APP-Code": "GPIJ3886"}
-                self._openai_client = OpenAI(**client_kwargs)
-                self._openai_available = True
-                logger.info("Agent LLM: OpenAI initialized")
-            except Exception as e:
-                logger.warning(f"Agent LLM: OpenAI init failed: {e}")
 
     @property
     def is_available(self) -> bool:
@@ -222,16 +230,22 @@ class LLMToolAdapter:
         return LLMResponse(content=error_msg, provider="error")
 
     def _get_provider_order(self, forced: Optional[str] = None) -> List[str]:
-        """Get provider try order."""
+        """Get provider try order.
+        
+        Priority: OpenAI (if available) > Gemini > Anthropic
+        """
         if forced:
             return [forced]
         order = []
-        if self._gemini_available:
-            order.append("gemini")
-        if self._anthropic_available:
-            order.append("anthropic")
+        # OpenAI first (preferred)
         if self._openai_available:
             order.append("openai")
+        # Then Gemini
+        if self._gemini_available:
+            order.append("gemini")
+        # Finally Anthropic
+        if self._anthropic_available:
+            order.append("anthropic")
         return order
 
     # ============================================================

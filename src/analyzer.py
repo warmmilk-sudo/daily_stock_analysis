@@ -528,7 +528,8 @@ class GeminiAnalyzer:
         """
         初始化 AI 分析器
 
-        优先级：Gemini > Anthropic > OpenAI
+        优先级：OpenAI 兼容 API > Gemini > Anthropic
+        优先使用 OpenAI 兼容格式调用，简化维护成本
 
         Args:
             api_key: Gemini API Key（可选，默认从配置读取）
@@ -543,27 +544,29 @@ class GeminiAnalyzer:
         self._openai_client = None  # OpenAI 客户端
         self._anthropic_client = None  # Anthropic 客户端
 
-        # 检查 Gemini API Key 是否有效（过滤占位符）
-        gemini_key_valid = self._api_key and not self._api_key.startswith('your_') and len(self._api_key) > 10
+        # 优先初始化 OpenAI 兼容 API（如果配置）
+        self._init_openai_fallback()
 
-        # 优先级：Gemini > Anthropic > OpenAI
-        if gemini_key_valid:
-            try:
-                self._init_model()
-            except Exception as e:
-                logger.warning(f"Gemini init failed: {e}, trying Anthropic then OpenAI")
-                self._try_anthropic_then_openai()
+        # 如果 OpenAI 不可用，尝试 Gemini
+        if not self._openai_client:
+            gemini_key_valid = self._api_key and not self._api_key.startswith('your_') and len(self._api_key) > 10
+            if gemini_key_valid:
+                try:
+                    self._init_model()
+                except Exception as e:
+                    logger.warning(f"Gemini init failed: {e}, trying Anthropic")
+                    self._init_anthropic_fallback()
+            else:
+                logger.info("Gemini API Key not configured, trying Anthropic")
+                self._init_anthropic_fallback()
         else:
-            logger.info("Gemini API Key not configured, trying Anthropic then OpenAI")
-            self._try_anthropic_then_openai()
+            # OpenAI 可用，设置模型名称
+            self._current_model_name = config.openai_model
+            self._use_openai = True
+            logger.info(f"AI 分析器初始化成功 (OpenAI 兼容 API: {config.openai_model})")
 
         if not self._model and not self._anthropic_client and not self._openai_client:
             logger.warning("No AI API Key configured, AI analysis will be unavailable")
-
-    def _try_anthropic_then_openai(self) -> None:
-        """优先尝试 Anthropic，其次 OpenAI 作为备选。两者均初始化以供运行时互为故障转移（如 Anthropic 429 时切 OpenAI）。"""
-        self._init_anthropic_fallback()
-        self._init_openai_fallback()
 
     def _init_anthropic_fallback(self) -> None:
         """
@@ -631,6 +634,8 @@ class GeminiAnalyzer:
                 client_kwargs["base_url"] = config.openai_base_url
             if config.openai_base_url and "aihubmix.com" in config.openai_base_url:
                 client_kwargs["default_headers"] = {"APP-Code": "GPIJ3886"}
+            # Add timeout to avoid hanging requests (default 300 seconds)
+            client_kwargs["timeout"] = 180
 
             self._openai_client = OpenAI(**client_kwargs)
             self._current_model_name = config.openai_model
@@ -885,14 +890,13 @@ class GeminiAnalyzer:
     
     def _call_api_with_retry(self, prompt: str, generation_config: dict) -> str:
         """
-        调用 AI API，带有重试和模型切换机制
+        调用 AI API，带有重试机制
         
-        优先级：Gemini > Gemini 备选模型 > OpenAI 兼容 API
+        优先级：OpenAI 兼容 API > Gemini > Anthropic
         
         处理 429 限流错误：
-        1. 先指数退避重试
+        1. 指数退避重试（最多 gemini_max_retries 次）
         2. 多次失败后切换到备选模型
-        3. Gemini 完全失败后尝试 OpenAI
         
         Args:
             prompt: 提示词
@@ -901,124 +905,81 @@ class GeminiAnalyzer:
         Returns:
             响应文本
         """
-        # 若使用 Anthropic，调用 Anthropic（失败时回退到 OpenAI）
-        if self._use_anthropic:
-            try:
-                return self._call_anthropic_api(prompt, generation_config)
-            except Exception as anthropic_error:
-                if self._openai_client:
-                    logger.warning(
-                        "[Anthropic] All retries failed, falling back to OpenAI"
-                    )
-                    return self._call_openai_api(prompt, generation_config)
-                raise anthropic_error
-
-        # 若使用 OpenAI（仅当无 Anthropic 时为主选）
-        if self._use_openai:
-            return self._call_openai_api(prompt, generation_config)
-
         config = get_config()
         max_retries = config.gemini_max_retries
         base_delay = config.gemini_retry_delay
         
         last_error = None
-        tried_fallback = getattr(self, '_using_fallback', False)
         
-        for attempt in range(max_retries):
-            try:
-                # 请求前增加延时（防止请求过快触发限流）
-                if attempt > 0:
-                    delay = base_delay * (2 ** (attempt - 1))  # 指数退避: 5, 10, 20, 40...
-                    delay = min(delay, 60)  # 最大60秒
-                    logger.info(f"[Gemini] 第 {attempt + 1} 次重试，等待 {delay:.1f} 秒...")
-                    time.sleep(delay)
-                
-                response = self._model.generate_content(
-                    prompt,
-                    generation_config=generation_config,
-                    request_options={"timeout": 120}
-                )
-                
-                if response and response.text:
-                    return response.text
-                else:
-                    raise ValueError("Gemini 返回空响应")
-                    
-            except Exception as e:
-                last_error = e
-                error_str = str(e)
-                
-                # 检查是否是 429 限流错误
-                is_rate_limit = '429' in error_str or 'quota' in error_str.lower() or 'rate' in error_str.lower()
-                
-                if is_rate_limit:
-                    logger.warning(f"[Gemini] API 限流 (429)，第 {attempt + 1}/{max_retries} 次尝试: {error_str[:100]}")
-                    
-                    # 如果已经重试了一半次数且还没切换过备选模型，尝试切换
-                    if attempt >= max_retries // 2 and not tried_fallback:
-                        if self._switch_to_fallback_model():
-                            tried_fallback = True
-                            logger.info("[Gemini] 已切换到备选模型，继续重试")
-                        else:
-                            logger.warning("[Gemini] 切换备选模型失败，继续使用当前模型重试")
-                else:
-                    # 非限流错误，记录并继续重试
-                    logger.warning(f"[Gemini] API 调用失败，第 {attempt + 1}/{max_retries} 次尝试: {error_str[:100]}")
-        
-        # Gemini 重试耗尽，尝试 Anthropic 再 OpenAI
-        if self._anthropic_client:
-            logger.warning("[Gemini] All retries failed, switching to Anthropic")
-            try:
-                return self._call_anthropic_api(prompt, generation_config)
-            except Exception as anthropic_error:
-                logger.warning(
-                    f"[Anthropic] Fallback failed: {anthropic_error}"
-                )
-                if self._openai_client:
-                    logger.warning("[Gemini] Trying OpenAI as final fallback")
-                    try:
-                        return self._call_openai_api(prompt, generation_config)
-                    except Exception as openai_error:
-                        logger.error(
-                            f"[OpenAI] Final fallback also failed: {openai_error}"
-                        )
-                        raise last_error or anthropic_error or openai_error
-                raise last_error or anthropic_error
-
+        # 1. 尝试 OpenAI 兼容 API（首选）
         if self._openai_client:
-            logger.warning("[Gemini] All retries failed, switching to OpenAI")
             try:
                 return self._call_openai_api(prompt, generation_config)
-            except Exception as openai_error:
-                logger.error(f"[OpenAI] Fallback also failed: {openai_error}")
-                raise last_error or openai_error
-        # 懒加载 Anthropic，再尝试 OpenAI
+            except Exception as e:
+                last_error = e
+                logger.warning(f"[OpenAI] 调用失败: {e}")
+        
+        # 2. 尝试 Gemini
+        if self._model:
+            tried_fallback = getattr(self, '_using_fallback', False)
+            for attempt in range(max_retries):
+                try:
+                    if attempt > 0:
+                        delay = base_delay * (2 ** (attempt - 1))
+                        delay = min(delay, 60)
+                        logger.info(f"[Gemini] 第 {attempt + 1} 次重试，等待 {delay:.1f} 秒...")
+                        time.sleep(delay)
+                    
+                    response = self._model.generate_content(
+                        prompt,
+                        generation_config=generation_config,
+                        request_options={"timeout": 120}
+                    )
+                    
+                    if response and response.text:
+                        return response.text
+                    else:
+                        raise ValueError("Gemini 返回空响应")
+                        
+                except Exception as e:
+                    last_error = e
+                    error_str = str(e)
+                    is_rate_limit = '429' in error_str or 'quota' in error_str.lower() or 'rate' in error_str.lower()
+                    
+                    if is_rate_limit:
+                        logger.warning(f"[Gemini] API 限流 (429)，第 {attempt + 1}/{max_retries} 次尝试")
+                        
+                        if attempt >= max_retries // 2 and not tried_fallback:
+                            if self._switch_to_fallback_model():
+                                tried_fallback = True
+                                logger.info("[Gemini] 已切换到备选模型，继续重试")
+                            else:
+                                logger.warning("[Gemini] 切换备选模型失败，继续使用当前模型重试")
+                    else:
+                        logger.warning(f"[Gemini] API 调用失败，第 {attempt + 1}/{max_retries} 次尝试: {error_str[:100]}")
+        
+        # 3. 尝试 Anthropic
+        if self._anthropic_client:
+            try:
+                return self._call_anthropic_api(prompt, generation_config)
+            except Exception as e:
+                last_error = e
+                logger.warning(f"[Anthropic] 调用失败: {e}")
+        
+        # 4. 懒加载 Anthropic（如果之前未初始化）
         if config.anthropic_api_key and not self._anthropic_client:
-            logger.warning("[Gemini] Trying lazy-init Anthropic API")
-            self._init_anthropic_fallback()
-            if self._anthropic_client:
-                try:
+            try:
+                self._init_anthropic_fallback()
+                if self._anthropic_client:
                     return self._call_anthropic_api(prompt, generation_config)
-                except Exception as ae:
-                    logger.warning(f"[Anthropic] Lazy fallback failed: {ae}")
-                    if self._openai_client:
-                        try:
-                            return self._call_openai_api(prompt, generation_config)
-                        except Exception as oe:
-                            raise last_error or ae or oe
-                    raise last_error or ae
-        if config.openai_api_key and not self._openai_client:
-            logger.warning("[Gemini] Trying lazy-init OpenAI API")
-            self._init_openai_fallback()
-            if self._openai_client:
-                try:
-                    return self._call_openai_api(prompt, generation_config)
-                except Exception as openai_error:
-                    logger.error(f"[OpenAI] Lazy fallback also failed: {openai_error}")
-                    raise last_error or openai_error
-
-        # 所有备选均耗尽
-        raise last_error or Exception("所有 AI API 调用失败，已达最大重试次数")
+            except Exception as e:
+                last_error = e
+                logger.warning(f"[Anthropic] 懒加载失败: {e}")
+        
+        # 所有尝试都失败
+        error_msg = last_error or Exception("所有 AI API 调用失败")
+        logger.error(f"[LLM] 所有降级策略均失败: {error_msg}")
+        raise error_msg
     
     def analyze(
         self, 
