@@ -566,8 +566,8 @@ const ChatPage: React.FC = () => {
                     {msg.role === 'user' ? 'U' : 'AI'}
                   </div>
                   <div className={`max-w-[92%] md:max-w-[80%] rounded-2xl px-4 py-3 md:px-5 md:py-3.5 ${msg.role === 'user'
-                      ? 'bg-cyan/10 text-white border border-cyan/20 rounded-tr-sm'
-                      : 'bg-white/5 text-secondary border border-white/10 rounded-tl-sm'
+                    ? 'bg-cyan/10 text-white border border-cyan/20 rounded-tr-sm'
+                    : 'bg-white/5 text-secondary border border-white/10 rounded-tl-sm'
                     }`}>
                     {/* Strategy chip for assistant messages */}
                     {msg.role === 'assistant' && msg.strategyName && (
@@ -692,8 +692,7 @@ const ChatPage: React.FC = () => {
                 placeholder="例如：分析 600519 / 茅台现在适合买入吗？ (Enter 发送, Shift+Enter 换行)"
                 disabled={loading}
                 rows={1}
-                className="input-terminal flex-1 min-h-[44px] max-h-[200px] py-2.5 resize-none"
-                style={{ height: 'auto' }}
+                className="input-terminal flex-1 min-h-[44px] max-h-[200px] py-2.5 resize-none h-auto"
                 onInput={(e) => {
                   const t = e.target as HTMLTextAreaElement;
                   t.style.height = 'auto';

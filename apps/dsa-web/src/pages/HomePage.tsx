@@ -262,7 +262,7 @@ const HomePage: React.FC = () => {
       <header
         className="px-4 md:px-0 md:col-start-2 md:col-end-5 row-start-1 py-3 border-b border-white/5 flex-shrink-0 flex items-center min-w-0 overflow-hidden"
       >
-        <div className="flex items-center gap-2 w-full min-w-0 flex-1 max-w-full md:max-w-[1168px]">
+        <div className="flex items-center gap-2 w-full min-w-0 flex-1 max-w-full lg:max-w-[1168px]">
           <div className="flex-1 relative min-w-0">
             <input
               type="text"
