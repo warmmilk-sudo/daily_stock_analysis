@@ -28,6 +28,7 @@ class ToolCall:
     id: str
     name: str
     arguments: Dict[str, Any]
+    thought_signature: Optional[str] = None
 
 
 @dataclass
@@ -170,6 +171,7 @@ class LLMToolAdapter:
                 logger.info("Agent LLM: Anthropic initialized")
             except Exception as e:
                 logger.warning(f"Agent LLM: Anthropic init failed: {e}")
+
 
     @property
     def is_available(self) -> bool:
@@ -395,14 +397,18 @@ class LLMToolAdapter:
                 # Reconstruct assistant message with tool_calls
                 openai_tc = []
                 for tc in msg["tool_calls"]:
-                    openai_tc.append({
+                    tc_dict = {
                         "id": tc.get("id", str(uuid.uuid4())[:8]),
                         "type": "function",
                         "function": {
                             "name": tc["name"],
                             "arguments": json.dumps(tc["arguments"]),
                         }
-                    })
+                    }
+                    sig = tc.get("thought_signature")
+                    if sig is not None:
+                        tc_dict["provider_specific_fields"] = {"thought_signature": sig}
+                    openai_tc.append(tc_dict)
                 openai_msg = {
                     "role": "assistant",
                     "content": msg.get("content"),
@@ -446,10 +452,21 @@ class LLMToolAdapter:
                         args = json.loads(tc.function.arguments)
                     except json.JSONDecodeError:
                         args = {"raw": tc.function.arguments}
+                # Extract thought_signature: stored in __pydantic_extra__ as provider_specific_fields
+                psf = getattr(tc, 'provider_specific_fields', None)
+                if psf is not None:
+                    sig = psf.get('thought_signature') if isinstance(psf, dict) else getattr(psf, 'thought_signature', None)
+                else:
+                    func_psf = getattr(tc.function, 'provider_specific_fields', None)
+                    if func_psf is not None:
+                        sig = func_psf.get('thought_signature') if isinstance(func_psf, dict) else getattr(func_psf, 'thought_signature', None)
+                    else:
+                        sig = getattr(tc, 'thought_signature', None)
                 tool_calls.append(ToolCall(
                     id=tc.id,
                     name=tc.function.name,
                     arguments=args,
+                    thought_signature=sig,
                 ))
 
         usage = {}
