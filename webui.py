@@ -48,6 +48,7 @@ def main() -> int:
             host=host,
             port=port,
             log_level="info",
+            access_log=False,
         )
     except KeyboardInterrupt:
         pass

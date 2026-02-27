@@ -29,28 +29,46 @@ logger = logging.getLogger(__name__)
 
 def fetch_url_content(url: str, timeout: int = 5) -> str:
     """
-    获取 URL 网页正文内容 (使用 newspaper3k)
+    获取 URL 网页正文内容 (优化版：使用 requests 预获取并自动识别编码)
+    
+    流程：
+    1. 使用 requests 获取 HTML，利用 apparent_encoding 识别编码（处理 GBK/GB2312）
+    2. 将正确的 HTML 内容交给 newspaper3k 进行正文提取
     """
     try:
-        # 配置 newspaper3k
-        config = Config()
-        config.browser_user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        config.request_timeout = timeout
-        config.fetch_images = False  # 不下载图片
-        config.memoize_articles = False # 不缓存
+        # 配置
+        user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        headers = {'User-Agent': user_agent}
 
-        article = Article(url, config=config, language='zh') # 默认中文，但也支持其他
-        article.download()
+        # 1. 下载网页内容
+        response = requests.get(url, headers=headers, timeout=timeout)
+        
+        # 2. 自动识别并设置编码 (核心修复：处理中文财经网站常见的 GBK 编码)
+        if response.encoding == 'ISO-8859-1' or not response.encoding:
+            response.encoding = response.apparent_encoding
+            
+        html_content = response.text
+        if not html_content:
+            return ""
+
+        # 3. 使用 newspaper3k 提取正文
+        config = Config()
+        config.browser_user_agent = user_agent
+        config.request_timeout = timeout
+        config.fetch_images = False
+        config.memoize_articles = False
+
+        article = Article(url, config=config, language='zh')
+        article.set_html(html_content)
         article.parse()
 
-        # 获取正文
+        # 获取正文并简单处理
         text = article.text.strip()
-
-        # 简单的后处理，去除空行
         lines = [line.strip() for line in text.split('\n') if line.strip()]
         text = '\n'.join(lines)
 
-        return text[:1500]  # 限制返回长度（比 bs4 稍微多一点，因为 newspaper 解析更干净）
+        return text[:1500]
+        
     except Exception as e:
         logger.debug(f"Fetch content failed for {url}: {e}")
 

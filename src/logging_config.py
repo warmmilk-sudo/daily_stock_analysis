@@ -30,6 +30,7 @@ DEFAULT_QUIET_LOGGERS = [
     'sqlalchemy',
     'google',
     'httpx',
+    'uvicorn.access',
 ]
 
 

@@ -12,7 +12,8 @@
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, HTTPException, Query, Depends, Response
+from fastapi.responses import JSONResponse
 
 from api.deps import get_database_manager
 from api.v1.schemas.history import (
@@ -96,11 +97,14 @@ def get_history_list(
             for item in result.get("items", [])
         ]
         
-        return HistoryListResponse(
-            total=result.get("total", 0),
-            page=page,
-            limit=limit,
-            items=items
+        return JSONResponse(
+            content={
+                "total": result.get("total", 0),
+                "page": page,
+                "limit": limit,
+                "items": [item.dict() for item in items]
+            },
+            media_type="application/json; charset=utf-8"
         )
         
     except Exception as e:
@@ -210,11 +214,14 @@ def get_history_detail(
             context_snapshot=result.get("context_snapshot")
         )
         
-        return AnalysisReport(
-            meta=meta,
-            summary=summary,
-            strategy=strategy,
-            details=details
+        return JSONResponse(
+            content={
+                "meta": meta.dict(),
+                "summary": summary.dict(),
+                "strategy": strategy.dict() if strategy else None,
+                "details": details.dict() if details else None
+            },
+            media_type="application/json; charset=utf-8"
         )
         
     except HTTPException:
@@ -272,9 +279,12 @@ def get_history_news(
             for item in items
         ]
 
-        return NewsIntelResponse(
-            total=len(response_items),
-            items=response_items
+        return JSONResponse(
+            content={
+                "total": len(response_items),
+                "items": [item.dict() for item in response_items]
+            },
+            media_type="application/json; charset=utf-8"
         )
 
     except Exception as e:
