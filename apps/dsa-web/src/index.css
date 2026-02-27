@@ -798,8 +798,8 @@ body {
   /* 底部安全区适配 */
   .dock-safe-area {
     padding-left: 0;
-    padding-bottom: 72px;
-    /* 给底部导航留出空间 */
+    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+    /* 给底部导航留出空间，并适配 iOS 安全区 */
   }
 
   /* 标题和文字大小优化 */

@@ -94,13 +94,13 @@ const ChatPage: React.FC = () => {
       setStrategies(res.strategies);
       const defaultId = res.strategies.find((s) => s.id === 'bull_trend')?.id || res.strategies[0]?.id || '';
       setSelectedStrategy(defaultId);
-    }).catch(() => {});
+    }).catch(() => { });
   }, []);
 
   // Load sessions list
   const loadSessions = useCallback(() => {
     setSessionsLoading(true);
-    agentApi.getChatSessions().then(setSessions).catch(() => {}).finally(() => setSessionsLoading(false));
+    agentApi.getChatSessions().then(setSessions).catch(() => { }).finally(() => setSessionsLoading(false));
   }, []);
 
   // Load sessions list + restore messages on mount (with stale session detection)
@@ -126,7 +126,7 @@ const ChatPage: React.FC = () => {
         setSessionId(newId);
         sessionIdRef.current = newId;
       }
-    }).catch(() => {}).finally(() => setSessionsLoading(false));
+    }).catch(() => { }).finally(() => setSessionsLoading(false));
   }, []);
 
   // Persist session_id to localStorage
@@ -143,7 +143,7 @@ const ChatPage: React.FC = () => {
     setSidebarOpen(false);
     agentApi.getChatSessionMessages(targetSessionId).then((msgs) => {
       setMessages(msgs.map((m) => ({ id: m.id, role: m.role, content: m.content })));
-    }).catch(() => {});
+    }).catch(() => { });
   }, [sessionId, messages.length]);
 
   // Start a new conversation
@@ -163,7 +163,7 @@ const ChatPage: React.FC = () => {
     agentApi.deleteChatSession(deleteConfirmId).then(() => {
       setSessions((prev) => prev.filter((s) => s.session_id !== deleteConfirmId));
       if (deleteConfirmId === sessionId) startNewChat();
-    }).catch(() => {});
+    }).catch(() => { });
     setDeleteConfirmId(null);
   }, [deleteConfirmId, sessionId, startNewChat]);
 
@@ -188,7 +188,7 @@ const ChatPage: React.FC = () => {
             ctx.previous_change_pct = report.meta.changePct;
           }
           followUpContextRef.current = ctx;
-        }).catch(() => {});
+        }).catch(() => { });
       }
       // Clean URL params
       setSearchParams({}, { replace: true });
@@ -438,9 +438,8 @@ const ChatPage: React.FC = () => {
             <button
               key={s.session_id}
               onClick={() => switchSession(s.session_id)}
-              className={`w-full text-left px-3 py-2.5 border-b border-white/5 hover:bg-white/5 transition-colors group ${
-                s.session_id === sessionId ? 'bg-white/10' : ''
-              }`}
+              className={`w-full text-left px-3 py-2.5 border-b border-white/5 hover:bg-white/5 transition-colors group ${s.session_id === sessionId ? 'bg-white/10' : ''
+                }`}
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="text-sm text-secondary group-hover:text-white truncate flex-1">
@@ -533,62 +532,60 @@ const ChatPage: React.FC = () => {
         </header>
 
         <div className="flex-1 flex flex-col glass-card overflow-hidden min-h-0 relative z-10">
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 custom-scrollbar relative z-10">
-          {messages.length === 0 && !loading ? (
-            <div className="h-full flex flex-col items-center justify-center text-center">
-              <div className="w-16 h-16 mb-4 rounded-2xl bg-white/5 flex items-center justify-center">
-                <svg className="w-8 h-8 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-white mb-2">开始问股</h3>
-              <p className="text-sm text-secondary max-w-sm mb-6">
-                输入「分析 600519」或「茅台现在能买吗」，AI 将调用实时数据工具为您生成决策报告。
-              </p>
-              {/* Quick question chips */}
-              <div className="flex flex-wrap gap-2 justify-center max-w-lg">
-                {QUICK_QUESTIONS.map((q, i) => (
-                  <button
-                    key={i}
-                    onClick={() => handleQuickQuestion(q)}
-                    className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-sm text-secondary hover:text-white hover:border-cyan/40 hover:bg-cyan/5 transition-all"
-                  >
-                    {q.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : (
-            messages.map((msg) => (
-              <div key={msg.id} className={`flex gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${
-                  msg.role === 'user' ? 'bg-cyan text-black' : 'bg-white/10 text-white'
-                }`}>
-                  {msg.role === 'user' ? 'U' : 'AI'}
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 custom-scrollbar relative z-10">
+            {messages.length === 0 && !loading ? (
+              <div className="h-full flex flex-col items-center justify-center text-center">
+                <div className="w-16 h-16 mb-4 rounded-2xl bg-white/5 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
                 </div>
-                <div className={`max-w-[80%] rounded-2xl px-5 py-3.5 ${
-                  msg.role === 'user'
-                    ? 'bg-cyan/10 text-white border border-cyan/20 rounded-tr-sm'
-                    : 'bg-white/5 text-secondary border border-white/10 rounded-tl-sm'
-                }`}>
-                  {/* Strategy chip for assistant messages */}
-                  {msg.role === 'assistant' && msg.strategyName && (
-                    <div className="mb-2">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan/10 border border-cyan/20 text-xs text-cyan">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                        {msg.strategyName}
-                      </span>
-                    </div>
-                  )}
-                  {/* Collapsible thinking block */}
-                  {msg.role === 'assistant' && renderThinkingBlock(msg)}
-                  {msg.role === 'assistant' && expandedThinking.has(msg.id) && msg.thinkingSteps && renderThinkingDetails(msg.thinkingSteps)}
-                  {/* Markdown rendering for assistant, plain text for user */}
-                  {msg.role === 'assistant' ? (
-                    <div className="prose prose-invert prose-sm max-w-none
+                <h3 className="text-lg font-medium text-white mb-2">开始问股</h3>
+                <p className="text-sm text-secondary max-w-sm mb-6">
+                  输入「分析 600519」或「茅台现在能买吗」，AI 将调用实时数据工具为您生成决策报告。
+                </p>
+                {/* Quick question chips */}
+                <div className="flex flex-wrap gap-2 justify-center max-w-lg">
+                  {QUICK_QUESTIONS.map((q, i) => (
+                    <button
+                      key={i}
+                      onClick={() => handleQuickQuestion(q)}
+                      className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-sm text-secondary hover:text-white hover:border-cyan/40 hover:bg-cyan/5 transition-all"
+                    >
+                      {q.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              messages.map((msg) => (
+                <div key={msg.id} className={`flex gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${msg.role === 'user' ? 'bg-cyan text-black' : 'bg-white/10 text-white'
+                    }`}>
+                    {msg.role === 'user' ? 'U' : 'AI'}
+                  </div>
+                  <div className={`max-w-[92%] md:max-w-[80%] rounded-2xl px-4 py-3 md:px-5 md:py-3.5 ${msg.role === 'user'
+                      ? 'bg-cyan/10 text-white border border-cyan/20 rounded-tr-sm'
+                      : 'bg-white/5 text-secondary border border-white/10 rounded-tl-sm'
+                    }`}>
+                    {/* Strategy chip for assistant messages */}
+                    {msg.role === 'assistant' && msg.strategyName && (
+                      <div className="mb-2">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan/10 border border-cyan/20 text-xs text-cyan">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                          {msg.strategyName}
+                        </span>
+                      </div>
+                    )}
+                    {/* Collapsible thinking block */}
+                    {msg.role === 'assistant' && renderThinkingBlock(msg)}
+                    {msg.role === 'assistant' && expandedThinking.has(msg.id) && msg.thinkingSteps && renderThinkingDetails(msg.thinkingSteps)}
+                    {/* Markdown rendering for assistant, plain text for user */}
+                    {msg.role === 'assistant' ? (
+                      <div className="prose prose-invert prose-sm max-w-none
                       prose-headings:text-white prose-headings:font-semibold prose-headings:mt-3 prose-headings:mb-1.5
                       prose-h1:text-lg prose-h2:text-base prose-h3:text-sm
                       prose-p:leading-relaxed prose-p:mb-2 prose-p:last:mb-0
@@ -603,126 +600,126 @@ const ChatPage: React.FC = () => {
                       prose-a:text-cyan prose-a:no-underline hover:prose-a:underline
                       prose-blockquote:border-cyan/30 prose-blockquote:text-secondary
                     ">
-                      <Markdown remarkPlugins={[remarkGfm]}>{msg.content}</Markdown>
-                    </div>
-                  ) : (
-                    msg.content.split('\n').map((line, i) => (
-                      <p key={i} className="mb-1 last:mb-0 leading-relaxed">{line || '\u00A0'}</p>
-                    ))
-                  )}
-                </div>
-              </div>
-            ))
-          )}
-
-          {/* Live progress bubble — thinking mode: only show current stage */}
-          {loading && (
-            <div className="flex gap-4">
-              <div className="w-8 h-8 rounded-full bg-white/10 text-white flex items-center justify-center flex-shrink-0 text-xs font-bold">
-                AI
-              </div>
-              <div className="bg-white/5 border border-white/10 rounded-2xl rounded-tl-sm px-5 py-4 min-w-[200px] max-w-[80%]">
-                <div className="flex items-center gap-2.5 text-sm text-secondary">
-                  <div className="relative w-4 h-4 flex-shrink-0">
-                    <div className="absolute inset-0 rounded-full border-2 border-cyan/20" />
-                    <div className="absolute inset-0 rounded-full border-2 border-cyan border-t-transparent animate-spin" />
+                        <Markdown remarkPlugins={[remarkGfm]}>{msg.content}</Markdown>
+                      </div>
+                    ) : (
+                      msg.content.split('\n').map((line, i) => (
+                        <p key={i} className="mb-1 last:mb-0 leading-relaxed">{line || '\u00A0'}</p>
+                      ))
+                    )}
                   </div>
-                  <span className="text-secondary">{getCurrentStage(progressSteps)}</span>
+                </div>
+              ))
+            )}
+
+            {/* Live progress bubble — thinking mode: only show current stage */}
+            {loading && (
+              <div className="flex gap-4">
+                <div className="w-8 h-8 rounded-full bg-white/10 text-white flex items-center justify-center flex-shrink-0 text-xs font-bold">
+                  AI
+                </div>
+                <div className="bg-white/5 border border-white/10 rounded-2xl rounded-tl-sm px-5 py-4 min-w-[200px] max-w-[80%]">
+                  <div className="flex items-center gap-2.5 text-sm text-secondary">
+                    <div className="relative w-4 h-4 flex-shrink-0">
+                      <div className="absolute inset-0 rounded-full border-2 border-cyan/20" />
+                      <div className="absolute inset-0 rounded-full border-2 border-cyan border-t-transparent animate-spin" />
+                    </div>
+                    <span className="text-secondary">{getCurrentStage(progressSteps)}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          <div ref={messagesEndRef} />
-        </div>
+            <div ref={messagesEndRef} />
+          </div>
 
-        {/* Input area */}
-        <div className="p-4 md:p-6 border-t border-white/5 bg-black/20 relative z-20">
-          {/* Strategy radio selector with descriptions */}
-          {strategies.length > 0 && (
-            <div className="mb-3 flex flex-wrap gap-x-5 gap-y-2 items-start">
-              <span className="text-xs text-muted font-medium uppercase tracking-wider flex-shrink-0 mt-1">策略</span>
-              <label className="flex items-center gap-1.5 text-sm cursor-pointer group mt-0.5">
-                <input
-                  type="radio"
-                  name="strategy"
-                  value=""
-                  checked={selectedStrategy === ''}
-                  onChange={() => setSelectedStrategy('')}
-                  className="w-3.5 h-3.5 accent-cyan"
-                />
-                <span className={`transition-colors text-sm ${selectedStrategy === '' ? 'text-white font-medium' : 'text-secondary group-hover:text-white'}`}>
-                  通用分析
-                </span>
-              </label>
-              {strategies.map((s) => (
-                <label
-                  key={s.id}
-                  className="flex items-center gap-1.5 cursor-pointer group relative mt-0.5"
-                  onMouseEnter={() => setShowStrategyDesc(s.id)}
-                  onMouseLeave={() => setShowStrategyDesc(null)}
-                >
+          {/* Input area */}
+          <div className="p-4 md:p-6 border-t border-white/5 bg-black/20 relative z-20">
+            {/* Strategy radio selector with descriptions */}
+            {strategies.length > 0 && (
+              <div className="mb-3 flex flex-wrap gap-x-5 gap-y-2 items-start">
+                <span className="text-xs text-muted font-medium uppercase tracking-wider flex-shrink-0 mt-1">策略</span>
+                <label className="flex items-center gap-1.5 text-sm cursor-pointer group mt-0.5">
                   <input
                     type="radio"
                     name="strategy"
-                    value={s.id}
-                    checked={selectedStrategy === s.id}
-                    onChange={() => setSelectedStrategy(s.id)}
+                    value=""
+                    checked={selectedStrategy === ''}
+                    onChange={() => setSelectedStrategy('')}
                     className="w-3.5 h-3.5 accent-cyan"
                   />
-                  <span
-                    className={`transition-colors text-sm ${selectedStrategy === s.id ? 'text-white font-medium' : 'text-secondary group-hover:text-white'}`}
-                  >
-                    {s.name}
+                  <span className={`transition-colors text-sm ${selectedStrategy === '' ? 'text-white font-medium' : 'text-secondary group-hover:text-white'}`}>
+                    通用分析
                   </span>
-                  {/* Tooltip with strategy description */}
-                  {showStrategyDesc === s.id && s.description && (
-                    <div className="absolute left-0 bottom-full mb-2 z-50 w-64 p-2.5 rounded-lg bg-elevated border border-white/10 shadow-xl text-xs text-secondary leading-relaxed pointer-events-none animate-fade-in">
-                      <p className="font-medium text-white mb-1">{s.name}</p>
-                      <p>{s.description}</p>
-                    </div>
-                  )}
                 </label>
-              ))}
-            </div>
-          )}
+                {strategies.map((s) => (
+                  <label
+                    key={s.id}
+                    className="flex items-center gap-1.5 cursor-pointer group relative mt-0.5"
+                    onMouseEnter={() => setShowStrategyDesc(s.id)}
+                    onMouseLeave={() => setShowStrategyDesc(null)}
+                  >
+                    <input
+                      type="radio"
+                      name="strategy"
+                      value={s.id}
+                      checked={selectedStrategy === s.id}
+                      onChange={() => setSelectedStrategy(s.id)}
+                      className="w-3.5 h-3.5 accent-cyan"
+                    />
+                    <span
+                      className={`transition-colors text-sm ${selectedStrategy === s.id ? 'text-white font-medium' : 'text-secondary group-hover:text-white'}`}
+                    >
+                      {s.name}
+                    </span>
+                    {/* Tooltip with strategy description */}
+                    {showStrategyDesc === s.id && s.description && (
+                      <div className="absolute left-0 bottom-full mb-2 z-50 w-64 p-2.5 rounded-lg bg-elevated border border-white/10 shadow-xl text-xs text-secondary leading-relaxed pointer-events-none animate-fade-in">
+                        <p className="font-medium text-white mb-1">{s.name}</p>
+                        <p>{s.description}</p>
+                      </div>
+                    )}
+                  </label>
+                ))}
+              </div>
+            )}
 
-          <div className="flex gap-3 items-end">
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="例如：分析 600519 / 茅台现在适合买入吗？ (Enter 发送, Shift+Enter 换行)"
-              disabled={loading}
-              rows={1}
-              className="input-terminal flex-1 min-h-[44px] max-h-[200px] py-2.5 resize-none"
-              style={{ height: 'auto' }}
-              onInput={(e) => {
-                const t = e.target as HTMLTextAreaElement;
-                t.style.height = 'auto';
-                t.style.height = `${Math.min(t.scrollHeight, 200)}px`;
-              }}
-            />
-            <button
-              onClick={() => handleSend()}
-              disabled={!input.trim() || loading}
-              className="btn-primary h-[44px] px-6 flex-shrink-0 flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-              ) : (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-              )}
-              发送
-            </button>
+            <div className="flex gap-3 items-end">
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="例如：分析 600519 / 茅台现在适合买入吗？ (Enter 发送, Shift+Enter 换行)"
+                disabled={loading}
+                rows={1}
+                className="input-terminal flex-1 min-h-[44px] max-h-[200px] py-2.5 resize-none"
+                style={{ height: 'auto' }}
+                onInput={(e) => {
+                  const t = e.target as HTMLTextAreaElement;
+                  t.style.height = 'auto';
+                  t.style.height = `${Math.min(t.scrollHeight, 200)}px`;
+                }}
+              />
+              <button
+                onClick={() => handleSend()}
+                disabled={!input.trim() || loading}
+                className="btn-primary h-[44px] px-6 flex-shrink-0 flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                )}
+                发送
+              </button>
+            </div>
           </div>
         </div>
-      </div>
       </div>{/* end main chat area */}
     </div>
   );

@@ -229,80 +229,67 @@ const BacktestPage: React.FC = () => {
     <div className="min-h-screen flex flex-col">
       {/* Header */}
       <header className="flex-shrink-0 px-4 py-3 border-b border-white/5">
-        <div className="flex items-center gap-2 max-w-4xl">
+        <div className="flex flex-col md:flex-row md:items-center gap-2 max-w-6xl">
           <div className="flex-1 relative">
             <input
               type="text"
               value={codeFilter}
               onChange={(e) => setCodeFilter(e.target.value.toUpperCase())}
               onKeyDown={handleKeyDown}
-              placeholder="Filter by stock code (leave empty for all)"
+              placeholder="股票代码"
               disabled={isRunning}
               className="input-terminal w-full"
             />
           </div>
-          <button
-            type="button"
-            onClick={handleFilter}
-            disabled={isLoadingResults}
-            className="btn-secondary flex items-center gap-1.5 whitespace-nowrap"
-          >
-            Filter
-          </button>
-          <div className="flex items-center gap-1 whitespace-nowrap">
-            <span className="text-xs text-muted">Window</span>
-            <input
-              type="number"
-              min={1}
-              max={120}
-              value={evalDays}
-              onChange={(e) => setEvalDays(e.target.value)}
-              placeholder="10"
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
+            <button
+              type="button"
+              onClick={handleFilter}
+              disabled={isLoadingResults}
+              className="btn-secondary text-xs px-3 py-2 flex items-center gap-1.5 whitespace-nowrap"
+            >
+              过滤
+            </button>
+            <div className="flex items-center gap-1 whitespace-nowrap">
+              <span className="text-xs text-muted">窗口</span>
+              <input
+                type="number"
+                min={1}
+                max={120}
+                value={evalDays}
+                onChange={(e) => setEvalDays(e.target.value)}
+                placeholder="10"
+                disabled={isRunning}
+                className="input-terminal w-12 text-center text-xs py-1.5"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => setForceRerun(!forceRerun)}
               disabled={isRunning}
-              className="input-terminal w-14 text-center text-xs py-2"
-            />
+              className={`
+                flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                transition-all duration-200 whitespace-nowrap border cursor-pointer
+                ${forceRerun
+                  ? 'border-cyan/40 bg-cyan/10 text-cyan'
+                  : 'border-white/10 bg-transparent text-muted'
+                }
+              `}
+            >
+              强制
+            </button>
+            <button
+              type="button"
+              onClick={handleRun}
+              disabled={isRunning}
+              className="btn-primary text-xs px-4 py-2 flex items-center gap-1.5 whitespace-nowrap"
+            >
+              {isRunning ? '运行中' : '回测'}
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => setForceRerun(!forceRerun)}
-            disabled={isRunning}
-            className={`
-              flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium
-              transition-all duration-200 whitespace-nowrap border cursor-pointer
-              ${forceRerun
-                ? 'border-cyan/40 bg-cyan/10 text-cyan shadow-[0_0_8px_rgba(0,212,255,0.15)]'
-                : 'border-white/10 bg-transparent text-muted hover:border-white/20 hover:text-secondary'
-              }
-              disabled:opacity-50 disabled:cursor-not-allowed
-            `}
-          >
-            <span className={`
-              inline-block w-1.5 h-1.5 rounded-full transition-colors duration-200
-              ${forceRerun ? 'bg-cyan shadow-[0_0_4px_rgba(0,212,255,0.6)]' : 'bg-white/20'}
-            `} />
-            Force
-          </button>
-          <button
-            type="button"
-            onClick={handleRun}
-            disabled={isRunning}
-            className="btn-primary flex items-center gap-1.5 whitespace-nowrap"
-          >
-            {isRunning ? (
-              <>
-                <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                Running...
-              </>
-            ) : (
-              'Run Backtest'
-            )}
-          </button>
         </div>
         {runResult && (
-          <div className="mt-2 max-w-4xl">
+          <div className="mt-2 max-w-full overflow-x-auto">
             <RunSummary data={runResult} />
           </div>
         )}
@@ -312,25 +299,23 @@ const BacktestPage: React.FC = () => {
       </header>
 
       {/* Main content */}
-      <main className="flex-1 flex overflow-hidden p-3 gap-3">
-        {/* Left sidebar - Performance */}
-        <div className="flex flex-col gap-3 w-64 flex-shrink-0 overflow-y-auto">
+      <main className="flex-1 flex flex-col md:flex-row overflow-hidden p-3 gap-3">
+        {/* Sidebar - Performance */}
+        <div className="flex flex-row md:flex-col gap-3 w-full md:w-64 flex-shrink-0 overflow-x-auto md:overflow-y-auto pb-2 md:pb-0">
           {isLoadingPerf ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="w-8 h-8 border-2 border-cyan/20 border-t-cyan rounded-full animate-spin" />
+            <div className="flex items-center justify-center p-4">
+              <div className="w-6 h-6 border-2 border-cyan/20 border-t-cyan rounded-full animate-spin" />
             </div>
           ) : overallPerf ? (
-            <PerformanceCard metrics={overallPerf} title="Overall Performance" />
-          ) : (
-            <Card padding="md">
-              <p className="text-xs text-muted text-center py-4">
-                No backtest data yet. Run a backtest to see performance metrics.
-              </p>
-            </Card>
-          )}
+            <div className="min-w-[200px] flex-1">
+              <PerformanceCard metrics={overallPerf} title="整体表现" />
+            </div>
+          ) : null}
 
           {stockPerf && (
-            <PerformanceCard metrics={stockPerf} title={`${stockPerf.code || codeFilter}`} />
+            <div className="min-w-[200px] flex-1">
+              <PerformanceCard metrics={stockPerf} title={`${stockPerf.code || codeFilter}`} />
+            </div>
           )}
         </div>
 

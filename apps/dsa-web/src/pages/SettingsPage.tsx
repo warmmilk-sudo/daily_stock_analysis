@@ -56,8 +56,8 @@ const SettingsPage: React.FC = () => {
   const activeItems = itemsByCategory[activeCategory] || [];
 
   return (
-    <div className="min-h-screen px-4 pb-6 pt-4 md:px-6">
-      <header className="mb-4 rounded-2xl border border-white/8 bg-card/80 p-4 backdrop-blur-sm">
+    <div className="min-h-screen px-3 pb-6 pt-3 md:px-6 md:pt-4">
+      <header className="mb-4 rounded-xl md:rounded-2xl border border-white/8 bg-card/80 p-3 md:p-4 backdrop-blur-sm">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-xl font-semibold text-white">系统设置</h1>
@@ -119,11 +119,10 @@ const SettingsPage: React.FC = () => {
                   <button
                     key={category.category}
                     type="button"
-                    className={`w-full rounded-lg border px-3 py-2 text-left transition ${
-                      isActive
+                    className={`w-full rounded-lg border px-3 py-2 text-left transition ${isActive
                         ? 'border-accent bg-cyan/10 text-white'
                         : 'border-white/8 bg-elevated/40 text-secondary hover:border-white/16 hover:text-white'
-                    }`}
+                      }`}
                     onClick={() => setActiveCategory(category.category)}
                   >
                     <span className="flex items-center justify-between text-sm font-medium">

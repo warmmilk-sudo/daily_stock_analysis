@@ -25,7 +25,7 @@ const HomePage: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [inputError, setInputError] = useState<string>();
 
-// 历史列表状态
+  // 历史列表状态
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -91,7 +91,7 @@ const HomePage: React.FC = () => {
     enabled: true,
   });
 
-// 加载历史列表
+  // 加载历史列表
   const fetchHistory = useCallback(async (autoSelectFirst = false, reset = true, silent = false) => {
     if (!silent) {
       if (reset) {
@@ -115,7 +115,7 @@ const HomePage: React.FC = () => {
       // or construct endDate on frontend as end-of-day timestamp.
       const tomorrowDate = new Date();
       tomorrowDate.setDate(tomorrowDate.getDate() + 1);
-      
+
       const response = await historyApi.getList({
         startDate: getRecentStartDate(30),
         endDate: toDateInputValue(tomorrowDate),
@@ -257,15 +257,12 @@ const HomePage: React.FC = () => {
   };
 
   return (
-    <div
-      className="min-h-screen grid overflow-hidden w-full"
-      style={{ gridTemplateColumns: 'minmax(12px, 1fr) 256px 24px minmax(auto, 896px) minmax(12px, 1fr)', gridTemplateRows: 'auto 1fr' }}
-    >
-      {/* 顶部输入栏 - 与历史记录框左对齐，与 Market Sentiment 外框右对齐（不含 col5 右 padding） */}
+    <div className="flex flex-col md:grid md:grid-cols-[minmax(12px,_1fr)_256px_24px_minmax(auto,_896px)_minmax(12px,_1fr)] md:grid-rows-[auto_1fr] min-h-screen overflow-hidden w-full">
+      {/* 顶部输入栏 */}
       <header
-        className="col-start-2 col-end-5 row-start-1 py-3 border-b border-white/5 flex-shrink-0 flex items-center min-w-0 overflow-hidden"
+        className="px-4 md:px-0 md:col-start-2 md:col-end-5 row-start-1 py-3 border-b border-white/5 flex-shrink-0 flex items-center min-w-0 overflow-hidden"
       >
-        <div className="flex items-center gap-2 w-full min-w-0 flex-1" style={{ maxWidth: 'min(100%, 1168px)' }}>
+        <div className="flex items-center gap-2 w-full min-w-0 flex-1 max-w-full md:max-w-[1168px]">
           <div className="flex-1 relative min-w-0">
             <input
               type="text"
@@ -275,15 +272,15 @@ const HomePage: React.FC = () => {
                 setInputError(undefined);
               }}
               onKeyDown={handleKeyDown}
-              placeholder="输入股票代码，如 600519、00700、AAPL"
+              placeholder="输入代码, 如 600519"
               disabled={isAnalyzing}
               className={`input-terminal w-full ${inputError ? 'border-danger/50' : ''}`}
             />
             {inputError && (
-              <p className="absolute -bottom-4 left-0 text-xs text-danger">{inputError}</p>
+              <p className="absolute -bottom-4 left-0 text-[10px] text-danger">{inputError}</p>
             )}
             {duplicateError && (
-              <p className="absolute -bottom-4 left-0 text-xs text-warning">{duplicateError}</p>
+              <p className="absolute -bottom-4 left-0 text-[10px] text-warning">{duplicateError}</p>
             )}
           </div>
           <button
@@ -292,24 +289,14 @@ const HomePage: React.FC = () => {
             disabled={!stockCode || isAnalyzing}
             className="btn-primary flex items-center gap-1.5 whitespace-nowrap flex-shrink-0"
           >
-            {isAnalyzing ? (
-              <>
-                <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                分析中
-              </>
-            ) : (
-              '分析'
-            )}
+            {isAnalyzing ? '分析中...' : '分析'}
           </button>
         </div>
       </header>
 
-      {/* 左侧：任务面板 + 历史列表 */}
+      {/* 左侧：任务面板 + 历史列表 - 移动端可以考虑折叠或放在底部，这里先简单堆叠 */}
       <div
-        className="col-start-2 row-start-2 flex flex-col gap-3 overflow-hidden min-h-0"
+        className="px-4 md:px-0 md:col-start-2 md:row-start-2 flex flex-col gap-3 overflow-hidden min-h-0 mt-4 md:mt-0"
       >
         <TaskPanel tasks={activeTasks} />
         <HistoryList
@@ -320,19 +307,19 @@ const HomePage: React.FC = () => {
           selectedId={selectedReport?.meta.id}
           onItemClick={handleHistoryClick}
           onLoadMore={handleLoadMore}
-          className="max-h-[62vh] overflow-hidden"
+          className="max-h-[30vh] md:max-h-[62vh] overflow-hidden"
         />
       </div>
 
       {/* 右侧报告详情 */}
-      <section className="col-start-4 row-start-2 flex-1 overflow-y-auto pl-1 min-w-0 min-h-0">
+      <section className="px-4 md:px-0 md:col-start-4 md:row-start-2 flex-1 overflow-y-auto md:pl-1 min-w-0 min-h-0 mt-4 md:mt-0">
         {isLoadingReport ? (
-          <div className="flex flex-col items-center justify-center h-full">
+          <div className="flex flex-col items-center justify-center py-20 md:h-full">
             <div className="w-10 h-10 border-3 border-cyan/20 border-t-cyan rounded-full animate-spin" />
             <p className="mt-3 text-secondary text-sm">加载报告中...</p>
           </div>
         ) : selectedReport ? (
-          <div className="max-w-4xl">
+          <div className="max-w-4xl pb-10">
             {/* Follow-up button */}
             <div className="flex items-center justify-end mb-2">
               <button
@@ -343,25 +330,22 @@ const HomePage: React.FC = () => {
                   const rid = selectedReport.meta.id!;
                   navigate(`/chat?stock=${encodeURIComponent(code)}&name=${encodeURIComponent(name)}&recordId=${rid}`);
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan/10 border border-cyan/20 text-cyan text-sm hover:bg-cyan/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan/10 border border-cyan/20 text-cyan text-xs hover:bg-cyan/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
                 追问 AI
               </button>
             </div>
             <ReportSummary data={selectedReport} isHistory />
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center h-full text-center">
+          <div className="flex flex-col items-center justify-center py-20 md:h-full text-center">
             <div className="w-12 h-12 mb-3 rounded-xl bg-elevated flex items-center justify-center">
               <svg className="w-6 h-6 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
             <h3 className="text-base font-medium text-white mb-1.5">开始分析</h3>
-            <p className="text-xs text-muted max-w-xs">
+            <p className="text-xs text-muted max-w-xs px-4">
               输入股票代码进行分析，或从左侧选择历史报告查看
             </p>
           </div>

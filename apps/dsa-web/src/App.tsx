@@ -169,9 +169,9 @@ const AppContent: React.FC = () => {
     }
 
     return (
-        <div className="flex min-h-screen bg-base">
+        <div className="flex flex-col md:flex-row min-h-screen bg-base">
             <DockNav/>
-            <main className="flex-1 dock-safe-area">
+            <main className="flex-1 md:dock-safe-area">
                 <Routes>
                     <Route path="/" element={<HomePage/>}/>
                     <Route path="/chat" element={<ChatPage/>}/>
