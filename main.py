@@ -497,7 +497,7 @@ def prepare_webui_frontend_assets() -> bool:
     try:
         for command in commands:
             logger.info(f"执行前端命令: {' '.join(command)}")
-            subprocess.run(command, cwd=frontend_dir, check=True)
+            subprocess.run(command, cwd=frontend_dir, check=True, shell=os.name == 'nt')
         logger.info("前端静态资源构建完成")
         return True
     except subprocess.CalledProcessError as exc:
