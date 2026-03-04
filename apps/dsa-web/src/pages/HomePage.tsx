@@ -290,14 +290,13 @@ const HomePage: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen flex flex-col md:grid overflow-hidden w-full"
-      style={{ gridTemplateColumns: 'minmax(12px, 1fr) 256px 24px minmax(auto, 896px) minmax(12px, 1fr)', gridTemplateRows: 'auto 1fr' }}
+      className="min-h-screen flex flex-col md:grid overflow-hidden w-full grid-cols-[minmax(12px,1fr)_256px_24px_minmax(auto,896px)_minmax(12px,1fr)] grid-rows-[auto_1fr]"
     >
       {/* 顶部输入栏 */}
       <header
         className="md:col-start-2 md:col-end-5 md:row-start-1 py-3 px-3 md:px-0 border-b border-white/5 flex-shrink-0 flex items-center min-w-0 overflow-hidden"
       >
-        <div className="flex items-center gap-2 w-full min-w-0 flex-1" style={{ maxWidth: 'min(100%, 1168px)' }}>
+        <div className="flex items-center gap-2 w-full min-w-0 flex-1 max-w-[1168px]">
           {/* Mobile hamburger */}
           <button
             onClick={() => setSidebarOpen(true)}

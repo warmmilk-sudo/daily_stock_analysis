@@ -18,7 +18,7 @@ from dotenv import load_dotenv, dotenv_values
 from dataclasses import dataclass, field
 
 
-def setup_env(override: bool = False):
+def setup_env(override: bool = True):
     """
     Initialize environment variables from .env file.
 
@@ -401,16 +401,16 @@ class Config:
             _gemini_model_name = os.getenv('GEMINI_MODEL', 'gemini-3-flash-preview').strip()
             _anthropic_model_name = os.getenv('ANTHROPIC_MODEL', 'claude-3-5-sonnet-20241022').strip()
             _openai_model_name = os.getenv('OPENAI_MODEL', 'gpt-4o-mini').strip()
-            if gemini_api_keys:
-                litellm_model = f'gemini/{_gemini_model_name}'
-            elif anthropic_api_keys:
-                litellm_model = f'anthropic/{_anthropic_model_name}'
-            elif openai_api_keys:
+            if openai_api_keys:
                 # For openai-compatible models, add prefix only if not already prefixed
                 if '/' not in _openai_model_name:
                     litellm_model = f'openai/{_openai_model_name}'
                 else:
                     litellm_model = _openai_model_name
+            elif anthropic_api_keys:
+                litellm_model = f'anthropic/{_anthropic_model_name}'
+            elif gemini_api_keys:
+                litellm_model = f'gemini/{_gemini_model_name}'
 
         # LITELLM_FALLBACK_MODELS: comma-separated list of fallback models
         _fallback_str = os.getenv('LITELLM_FALLBACK_MODELS', '')

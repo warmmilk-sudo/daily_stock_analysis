@@ -37,10 +37,13 @@ if os.getenv("GITHUB_ACTIONS") != "true" and os.getenv("USE_PROXY", "false").low
 
 import argparse
 import logging
+import shutil
+import subprocess
 import sys
 import time
 import uuid
 from datetime import datetime, timezone, timedelta
+from pathlib import Path
 from typing import List, Optional, Tuple
 
 from data_provider.base import canonical_stock_code
@@ -491,8 +494,6 @@ def prepare_webui_frontend_assets() -> bool:
         ["npm", "run", "build"],
     )
     try:
-        import subprocess
-        import shutil
         for command in commands:
             logger.info(f"执行前端命令: {' '.join(command)}")
             subprocess.run(command, cwd=frontend_dir, check=True, shell=os.name == 'nt')
