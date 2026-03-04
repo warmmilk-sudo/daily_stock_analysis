@@ -37,19 +37,16 @@ if os.getenv("GITHUB_ACTIONS") != "true" and os.getenv("USE_PROXY", "false").low
 
 import argparse
 import logging
-import shutil
-import subprocess
 import sys
 import time
 import uuid
 from datetime import datetime, timezone, timedelta
-from pathlib import Path
 from typing import List, Optional, Tuple
 
 from data_provider.base import canonical_stock_code
 from src.core.pipeline import StockAnalysisPipeline
 from src.core.market_review import run_market_review
-
+from src.webui_frontend import prepare_webui_frontend_assets
 from src.config import get_config, Config
 from src.logging_config import setup_logging
 
@@ -468,7 +465,6 @@ def _is_truthy_env(var_name: str, default: str = "true") -> bool:
     value = os.getenv(var_name, default).strip().lower()
     return value not in {"0", "false", "no", "off"}
 
-
 def prepare_webui_frontend_assets() -> bool:
     """
     Build frontend static assets for WebUI startup.
@@ -495,6 +491,8 @@ def prepare_webui_frontend_assets() -> bool:
         ["npm", "run", "build"],
     )
     try:
+        import subprocess
+        import shutil
         for command in commands:
             logger.info(f"执行前端命令: {' '.join(command)}")
             subprocess.run(command, cwd=frontend_dir, check=True, shell=os.name == 'nt')
@@ -596,7 +594,7 @@ def main() -> int:
     bot_clients_started = False
     if start_serve:
         if not prepare_webui_frontend_assets():
-            logger.warning("前端自动构建未成功，继续启动 FastAPI 服务")
+            logger.warning("前端静态资源未就绪，继续启动 FastAPI 服务（Web 页面可能不可用）")
         try:
             start_api_server(host=args.host, port=args.port, config=config)
             bot_clients_started = True
@@ -704,7 +702,7 @@ def main() -> int:
             should_run_immediately = config.schedule_run_immediately
             if getattr(args, 'no_run_immediately', False):
                 should_run_immediately = False
-            
+
             logger.info(f"启动时立即执行: {should_run_immediately}")
 
             from src.scheduler import run_with_schedule
